@@ -1,0 +1,1902 @@
+%==============================================================
+%  INTRODUCCIÓN A SQL Y BASES DE DATOS RELACIONALES
+%  Módulo 1 – Fundamentos teóricos
+%  Formato: Artículo científico / Material académico
+%==============================================================
+
+\documentclass[12pt, a4paper]{article}
+
+% ─── Codificación y lenguaje ──────────────────────────────
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish, es-tabla]{babel}
+
+% ─── Tipografía ───────────────────────────────────────────
+\usepackage{lmodern}
+\usepackage{microtype}          % Mejora el espaciado tipográfico
+
+% ─── Matemáticas y símbolos ───────────────────────────────
+\usepackage{amsmath, amssymb}
+
+% ─── Geometría de página ──────────────────────────────────
+\usepackage[
+top=2.5cm, bottom=2.5cm,
+left=3cm, right=3cm
+]{geometry}
+
+% ─── Gráficos y figuras ───────────────────────────────────
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage[dvipsnames, table]{xcolor}
+\usepackage{tikz}
+
+% ─── Tablas ───────────────────────────────────────────────
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{multirow}
+
+% ─── Listados de código ───────────────────────────────────
+\usepackage{listings}
+\usepackage{lstautogobble}
+
+% Estilo general para código SQL
+\lstdefinestyle{sql}{
+	language=SQL,
+	basicstyle=\ttfamily\small,
+	keywordstyle=\bfseries\color{NavyBlue},
+	stringstyle=\color{BrickRed},
+	commentstyle=\itshape\color{Gray},
+	numberstyle=\tiny\color{Gray},
+	numbers=left,
+	numbersep=8pt,
+	stepnumber=1,
+	backgroundcolor=\color{gray!6},
+	frame=single,
+	framerule=0.4pt,
+	rulecolor=\color{gray!50},
+	tabsize=4,
+	showstringspaces=false,
+	breaklines=true,
+	breakatwhitespace=false,
+	captionpos=b,
+	autogobble=true,
+	xleftmargin=0.5cm,
+	morekeywords={
+		DATABASE, DATABASES, TABLES, SHOW, USE, ENGINE, CHARSET,
+		AUTO_INCREMENT, UNSIGNED, TINYINT, SMALLINT, MEDIUMINT,
+		BIGINT, DECIMAL, FLOAT, DOUBLE, DATETIME, TIMESTAMP,
+		VARCHAR, TEXT, BLOB, ENUM, SET, DESCRIBE, DESC,
+		FOREIGN KEY, REFERENCES, ON DELETE, ON UPDATE,
+		CASCADE, SET NULL, RESTRICT
+	}
+}
+\lstset{style=sql}
+
+% ─── Hipervínculos y referencias ──────────────────────────
+\usepackage[
+colorlinks=true,
+linkcolor=NavyBlue,
+citecolor=NavyBlue,
+urlcolor=NavyBlue
+]{hyperref}
+\usepackage{cleveref}
+
+% ─── Cabecera y pie de página ─────────────────────────────
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\textit{Comisión Nacional de Seguros y Fianzas}}
+\fancyhead[R]{\small\textit{Jorge Miyoshi Mikami Alonso}}
+
+\fancyfoot[C]{\small\thepage}
+\renewcommand{\headrulewidth}{0.4pt}\\
+
+
+% ─── Cajas informativas ───────────────────────────────────
+\usepackage{tcolorbox}
+\tcbuselibrary{breakable, skins}
+
+\newtcolorbox{definicion}[1]{
+	colback=NavyBlue!5,
+	colframe=NavyBlue!60,
+	fonttitle=\bfseries\small,
+	title=Definición: #1,
+	breakable
+}
+
+\newtcolorbox{ejemplo}{
+	colback=ForestGreen!5,
+	colframe=ForestGreen!50,
+	fonttitle=\bfseries\small,
+	title=Ejemplo práctico,
+	breakable
+}
+
+\newtcolorbox{nota}{
+	colback=Goldenrod!10,
+	colframe=Goldenrod!70,
+	fonttitle=\bfseries\small,
+	title=Nota importante,
+	breakable
+}
+
+% ─── Enumeraciones y listas ───────────────────────────────
+\usepackage{enumitem}
+\setlist[itemize]{leftmargin=*, itemsep=2pt, topsep=4pt}
+\setlist[enumerate]{leftmargin=*, itemsep=2pt, topsep=4pt}
+
+% ─── Espaciado ────────────────────────────────────────────
+\setlength{\parskip}{4pt}
+\setlength{\parindent}{0pt}
+
+% ─── Bibliografía ─────────────────────────────────────────
+\usepackage[
+backend=biber,
+style=ieee,
+sorting=nyt
+]{biblatex}
+\addbibresource{referencias.bib}
+
+%==============================================================
+%  DATOS DEL DOCUMENTO
+%==============================================================
+\title{%
+	{\large \textsc{Curso de SQL y Bases de Datos Relacionales}}\\[6pt]
+	{\LARGE \textbf{SQL}}\\[4pt]
+	{\large Inserción, Consulta y Administración de información en bases de datos relacionales basadas en SQL}
+}
+
+\author{%
+	\textbf{Material de Referencia }\\[2pt]
+	\small \texttt{miyoshikamium@gmail.mx}
+}
+
+\date{\small Versión 6.0 — \today}
+
+%==============================================================
+%  INICIO DEL DOCUMENTO
+%==============================================================
+\begin{document}
+	
+	\maketitle
+	\thispagestyle{fancy}
+	
+	%--------------------------------------------------------------
+	\begin{abstract}
+		\noindent
+		Este documento constituye el material teórico de referencia para el
+		Módulo 1 del \textit{Curso de SQL y Bases de Datos Relacionales}.
+		Se abordan los fundamentos históricos y conceptuales que dieron origen
+		a los sistemas de gestión de bases de datos (SGBD) relacionales, la
+		evolución del lenguaje SQL desde sus orígenes en los laboratorios de
+		IBM hasta los estándares modernos, y los principios del modelo
+		relacional propuesto por Edgar F.\ Codd.
+		
+		El objetivo es proveer al estudiante una base conceptual sólida que
+		permita contextualizar cada construcción sintáctica de SQL dentro de
+		un marco teórico coherente, facilitando un aprendizaje significativo
+		y duradero. El curso progresa desde la consulta básica de datos,
+		pasando por la modificación y escritura, hasta la administración
+		de esquemas y la integridad referencial.
+		
+		\smallskip
+		\textbf{Palabras clave:} base de datos, modelo relacional, SQL, SGBD,
+		álgebra relacional, normalización, ACID, DML, DDL.
+	\end{abstract}
+	
+	\tableofcontents
+	\vspace{8pt}
+	\hrule
+	\vspace{10pt}
+	
+	%==============================================================
+	% PARTE I: FUNDAMENTOS TEÓRICOS
+	%==============================================================
+	
+	\section{El Problema de los Datos: Una Perspectiva Histórica}
+	
+	Desde los albores de la civilización, la humanidad ha necesitado
+	almacenar y recuperar información de manera sistemática.
+	Las tablillas de arcilla sumerias (~3000 a.C.), los registros
+	contables del Imperio Romano, o los libros de contabilidad de los
+	comerciantes medievales son, en esencia, \textit{sistemas de gestión
+		de información}: colecciones de datos organizados con un propósito
+	definido y un mecanismo de consulta.
+	
+	La revolución informática de mediados del siglo XX transformó este
+	problema milenario en una disciplina formal.
+	Con la proliferación de computadoras en organizaciones bancarias,
+	gubernamentales y empresariales durante los años 1950 y 1960,
+	la necesidad de almacenar grandes volúmenes de datos de forma
+	eficiente y recuperarlos con rapidez se volvió crítica.
+	
+	\subsection{Era pre-relacional (1950–1970)}
+	
+	Los primeros sistemas de gestión de datos surgieron como soluciones
+	ad-hoc a problemas específicos.
+	Predominaban dos modelos principales:
+	
+	\begin{itemize}
+		\item \textbf{Modelo jerárquico:} Los datos se organizaban en una
+		estructura de árbol. IBM desarrolló IMS
+		(\textit{Information Management System}) en 1966 para la misión
+		Apolo de la NASA~\cite{date2003introduction}.
+		Aunque eficiente para consultas predefinidas, era rígido:
+		agregar una nueva relación entre datos requería reestructurar
+		físicamente el sistema.
+		
+		\item \textbf{Modelo de red (CODASYL):} Propuesto por el comité
+		CODASYL en 1969, permitía relaciones muchos-a-muchos mediante
+		punteros físicos entre registros~\cite{codasyl1971}.
+		Era más flexible que el jerárquico, pero extremadamente complejo
+		de administrar y altamente dependiente de la estructura física
+		del almacenamiento.
+	\end{itemize}
+	
+	El problema fundamental de ambos modelos era la
+	\textbf{dependencia físico-lógica}: los programas de aplicación
+	debían conocer cómo estaban organizados físicamente los datos en
+	disco para poder acceder a ellos. Un cambio en la estructura de
+	almacenamiento implicaba reescribir todos los programas.
+	
+	%==============================================================
+	\section{Edgar F.\ Codd y el Modelo Relacional}
+	
+	En junio de 1970, Edgar Frank Codd —matemático e investigador
+	de IBM— publicó el artículo que cambiaría para siempre el mundo de
+	las bases de datos:
+	\textit{``A Relational Model of Data for Large Shared Data Banks''}
+	en la revista \textit{Communications of the ACM}~\cite{codd1970}.
+	
+	\begin{definicion}{Modelo Relacional Codd, 1970}
+		Un modelo de datos en el que la información se representa
+		exclusivamente mediante \textbf{relaciones} (tablas bidimensionales),
+		y en el que todas las operaciones sobre los datos se expresan
+		mediante un conjunto cerrado de operaciones del
+		\textbf{álgebra relacional}, sin necesidad de conocer la
+		organización física del almacenamiento.
+	\end{definicion}
+	
+	La contribución de Codd fue revolucionaria por tres razones:
+	
+	\begin{enumerate}
+		\item \textbf{Independencia de datos:} Los programas de aplicación
+		operan sobre una representación lógica (tablas), completamente
+		desacoplada de cómo los datos se almacenan físicamente.
+		
+		\item \textbf{Fundamento matemático:} El modelo se basa en la
+		teoría de conjuntos y la lógica de predicados de primer orden,
+		lo que permite razonar formalmente sobre las operaciones.
+		
+		\item \textbf{Lenguaje declarativo:} El programador especifica
+		\emph{qué} datos quiere, no \emph{cómo} obtenerlos.
+		El sistema optimiza el acceso automáticamente.
+	\end{enumerate}
+	
+	\subsection{Las 12 reglas de Codd}
+	
+	En 1985, Codd formalizó su modelo en 12 reglas
+	(numeradas del 0 al 12) que debe cumplir un sistema para
+	ser considerado verdaderamente relacional~\cite{codd1985}.
+	Las más relevantes para este curso son:
+	
+	\begin{table}[H]
+		\centering
+		\small
+		\renewcommand{\arraystretch}{1.3}
+		\begin{tabularx}{\columnwidth}{@{} c X @{}}
+			\toprule
+			\textbf{Regla} & \textbf{Descripción} \\
+			\midrule
+			0 & Gestión mediante capacidades relacionales \\
+			1 & Representación de la información como tablas \\
+			2 & Acceso garantizado a cada dato (tabla + clave + columna) \\
+			3 & Tratamiento sistemático de valores nulos \\
+			6 & Actualización de vistas \\
+			9 & Independencia de datos física y lógica \\
+			12 & No subversión del modelo relacional \\
+			\bottomrule
+		\end{tabularx}
+		\caption{Selección de las 12 reglas de Codd (1985).}
+		\label{tab:reglas-codd}
+	\end{table}
+	
+	%==============================================================
+	\section{Nacimiento de SQL: De SEQUEL a SQL}
+	
+	A raíz de la publicación de Codd, IBM inició el proyecto
+	\textit{System R} en 1973 en sus laboratorios de San José,
+	California, con el objetivo de demostrar la viabilidad práctica del
+	modelo relacional~\cite{chamberlin1974}.
+	Donald D.\ Chamberlin y Raymond F.\ Boyce diseñaron un lenguaje de
+	consulta denominado \textbf{SEQUEL}
+	(\textit{Structured English Query Language}).
+	
+	El nombre fue posteriormente acortado a \textbf{SQL}
+	(\textit{Structured Query Language}) por razones legales de marca
+	registrada.
+	En paralelo, Michael Stonebraker y Eugene Wong desarrollaron
+	\textbf{INGRES} en la Universidad de California, Berkeley (1973–1977),
+	que introdujo su propio lenguaje de consulta llamado QUEL.
+	
+	\begin{nota}
+		Aunque coloquialmente se pronuncia tanto ``sequel'' como
+		``ese-cu-ele'', el estándar ISO/IEC lo denomina formalmente
+		``SQL''. En este curso usaremos la pronunciación ``ese-cu-ele''
+		por su precisión técnica.
+	\end{nota}
+	
+	\subsection{El primer sistema comercial: Oracle}
+	
+	En 1979, la empresa Relational Software Inc.\ (hoy Oracle
+	Corporation), fundada por Larry Ellison, liberó el primer
+	sistema de gestión de bases de datos relacionales comercial:
+	\textbf{Oracle V2}.
+	Paradójicamente, Oracle llegó al mercado antes que el propio
+	IBM con su DB2 (1983), a pesar de que la tecnología subyacente
+	provenía de los laboratorios de IBM.
+	
+	%==============================================================
+	\section{¿Qué es una Base de Datos?}
+	
+	\begin{definicion}{Base de Datos}
+		Una \textbf{base de datos} es una colección organizada, persistente
+		y compartible de datos relacionados entre sí, diseñada para
+		minimizar la redundancia y maximizar la integridad, de modo que
+		múltiples aplicaciones y usuarios puedan acceder a ella de manera
+		concurrente y controlada~\cite{date2003introduction}.
+	\end{definicion}
+	
+	Esta definición merece descomponerse en sus atributos esenciales:
+	
+	\begin{itemize}
+		\item \textbf{Organizada:} Los datos siguen una estructura formal
+		(esquema) que define qué tipos de información se almacenan y
+		cómo se relacionan entre sí.
+		
+		\item \textbf{Persistente:} Los datos sobreviven a la terminación
+		de los procesos que los crean. A diferencia de las variables en
+		memoria, los datos en una base de datos permanecen aunque el
+		sistema se apague.
+		
+		\item \textbf{Compartible:} Múltiples usuarios o aplicaciones
+		pueden acceder a los mismos datos simultáneamente, de forma
+		controlada y sin interferencias.
+		
+		\item \textbf{Mínima redundancia:} El mismo dato no se repite
+		innecesariamente en múltiples lugares, lo que reduce el riesgo
+		de inconsistencias (un dato cambia en un lugar pero no en otro).
+	\end{itemize}
+	
+	\subsection{Analogía con el mundo real}
+	
+	Imaginemos el sistema de una biblioteca universitaria:
+	
+	\begin{ejemplo}
+		Una biblioteca almacena información sobre \textbf{libros},
+		\textbf{estudiantes} y \textbf{préstamos}.
+		Sin una base de datos, cada ficha de préstamo copiaría el título
+		completo del libro, el autor, el nombre del estudiante, su carrera,
+		etc.
+		Si un estudiante cambia su dirección, habría que actualizar decenas
+		de fichas físicas.
+		
+		Con una base de datos relacional, el estudiante aparece
+		\emph{una sola vez} en la tabla \texttt{Estudiantes}.
+		Todos los préstamos simplemente hacen referencia a su identificador.
+		Un cambio de dirección se realiza en un único lugar y se refleja
+		automáticamente en todo el sistema.
+	\end{ejemplo}
+	
+	%==============================================================
+	% PARTE II: ADMINISTRACIÓN DE BASES DE DATOS Y TABLAS
+	%==============================================================
+	
+	\newpage
+	\section{Administración de la Base de Datos}
+	
+	Las sentencias de administración de bases de datos pertenecen al sublenguaje
+	\textbf{DDL} (\textit{Data Definition Language}). Operan sobre el contenedor de más alto nivel en MySQL: la
+	\textbf{base de datos} (también llamada \textit{schema}), que agrupa tablas,
+	vistas, procedimientos y demás objetos.
+	
+	\subsection{\texttt{CREATE DATABASE}}
+	
+	\begin{definicion}{CREATE DATABASE}
+		Crea una nueva base de datos vacía en el servidor. Permite especificar el
+		\textbf{juego de caracteres} (\textit{character set}) y la
+		\textbf{colación} (\textit{collation}) que determinarán cómo se almacenan
+		y comparan las cadenas de texto en todas sus tablas.
+	\end{definicion}
+	
+	\begin{lstlisting}[style=sql, caption={Sintaxis de CREATE DATABASE}]
+		CREATE DATABASE [IF NOT EXISTS] nombre_bd
+		[CHARACTER SET  charset_name]
+		[COLLATE        collation_name];
+	\end{lstlisting}
+	
+	\begin{ejemplo}
+		Crear una base de datos para una aplicación en español con soporte
+		completo de Unicode:
+		
+		\begin{lstlisting}[style=sql, caption={Base de datos con utf8mb4 y collation en español}]
+			CREATE DATABASE IF NOT EXISTS tienda_online
+			CHARACTER SET  utf8mb4
+			COLLATE        utf8mb4_unicode_ci;
+			
+			-- Seleccionar la base de datos activa
+			USE tienda_online;
+		\end{lstlisting}
+	\end{ejemplo}
+	
+	\textbf{Juegos de caracteres y colaciones más comunes:}
+	
+	\begin{table}[H]
+		\centering
+		\caption{Character sets y collations habituales en MySQL}
+		\renewcommand{\arraystretch}{1.3}
+		\rowcolors{2}{gray!10}{white}
+		\begin{tabularx}{\textwidth}{>{\ttfamily}l >{\ttfamily}l X}
+			\toprule
+			\textbf{charset}  & \textbf{collation}          & \textbf{Uso recomendado}                        \\
+			\midrule
+			utf8mb4  & utf8mb4\_unicode\_ci  & Unicode completo; soporta emojis; recomendado   \\
+			utf8mb4  & utf8mb4\_0900\_ai\_ci & Unicode 9.0; sin acento/mayúsculas; MySQL 8.0+  \\
+			utf8mb4  & utf8mb4\_bin          & Comparación binaria; distingue mayúsculas       \\
+			latin1   & latin1\_swedish\_ci   & Legado; solo caracteres ISO-8859-1              \\
+			\bottomrule
+		\end{tabularx}
+	\end{table}
+	
+	\begin{nota}
+		Usar \texttt{utf8} (sin \texttt{mb4}) en MySQL es un error frecuente: ese
+		alias solo soporta hasta 3 bytes por carácter y excluye emojis y algunos
+		ideogramas CJK. La elección correcta para proyectos nuevos es siempre
+		\texttt{utf8mb4}.
+	\end{nota}
+	
+	\begin{lstlisting}[style=sql, caption={Comandos de exploración de bases de datos}]
+		SHOW DATABASES;                    -- listar todas las bases de datos
+		SHOW CREATE DATABASE tienda_online; -- ver la definición completa
+		SELECT DATABASE();                  -- ver la base de datos activa
+	\end{lstlisting}
+	
+	\subsection{\texttt{DROP DATABASE}}
+	
+	\begin{definicion}{DROP DATABASE}
+		Elimina la base de datos y \textbf{todos los objetos que contiene}
+		(tablas, vistas, procedimientos, datos) de forma permanente e
+		irreversible. No existe confirmación ni papelera de reciclaje.
+	\end{definicion}
+	
+	\begin{lstlisting}[style=sql, caption={Sintaxis de DROP DATABASE}]
+		DROP DATABASE [IF EXISTS] nombre_bd;
+	\end{lstlisting}
+	
+	\begin{ejemplo}
+		\begin{lstlisting}[style=sql, caption={DROP DATABASE con y sin guarda}]
+			-- Genera error si la base de datos no existe
+			DROP DATABASE tienda_online;
+			
+			-- No genera error si no existe (útil en scripts de despliegue)
+			DROP DATABASE IF EXISTS tienda_online;
+		\end{lstlisting}
+	\end{ejemplo}
+	
+	\begin{nota}
+		\textbf{Precauciones antes de ejecutar DROP DATABASE:}
+		\begin{enumerate}
+			\item Verificar que se tiene un respaldo (\textit{backup}) actualizado.
+			\item Confirmar que ninguna aplicación activa tiene conexiones abiertas
+			a esa base de datos.
+			\item Usar siempre \texttt{IF EXISTS} en scripts de producción.
+		\end{enumerate}
+	\end{nota}
+	
+	%==============================================================
+	\newpage
+	\section{Administración de Tablas}
+	
+	Las sentencias de administración de tablas pertenecen al sublenguaje
+	\textbf{DDL} (\textit{Data Definition Language}). A diferencia de las
+	instrucciones DML, los cambios DDL son \textbf{autoconfirmados}
+	(\textit{auto-commit}) en la mayoría de los motores: no pueden deshacerse
+	con \texttt{ROLLBACK}.
+	
+	\subsection{\texttt{CREATE TABLE}}
+	
+	\begin{definicion}{CREATE TABLE}
+		Crea una nueva tabla en la base de datos activa. La sentencia define el
+		nombre de cada columna, su \textbf{tipo de dato}, las
+		\textbf{restricciones} de integridad y las \textbf{opciones de tabla}
+		(motor de almacenamiento, juego de caracteres, etc.).
+	\end{definicion}
+	
+	\textbf{Sintaxis completa:}
+	
+	\begin{lstlisting}[style=sql, caption={Estructura general de CREATE TABLE}]
+		CREATE TABLE [IF NOT EXISTS] nombre_tabla (
+		columna1  tipo  [opciones_columna] [restriccion_columna],
+		columna2  tipo  [opciones_columna] [restriccion_columna],
+		...
+		[restricciones_tabla]
+		) [opciones_tabla];
+	\end{lstlisting}
+	
+	\textbf{Tipos de datos más utilizados en MySQL:}
+	
+	\begin{table}[H]
+		\centering
+		\caption{Tipos de datos frecuentes en MySQL}
+		\renewcommand{\arraystretch}{1.3}
+		\rowcolors{2}{gray!10}{white}
+		\begin{tabularx}{\textwidth}{>{\ttfamily}l l X}
+			\toprule
+			\textbf{Tipo}         & \textbf{Categoría} & \textbf{Descripción}                             \\
+			\midrule
+			TINYINT               & Entero    & 1 byte; rango $-128$ a $127$ (o $0$–$255$ UNSIGNED) \\
+			INT / INTEGER         & Entero    & 4 bytes; rango $\pm2{,}1 \times 10^9$            \\
+			BIGINT                & Entero    & 8 bytes; para identificadores de gran volumen    \\
+			DECIMAL(p,s)          & Decimal   & Precisión exacta; ideal para valores monetarios  \\
+			FLOAT / DOUBLE        & Flotante  & Precisión aproximada; uso científico             \\
+			CHAR(n)               & Texto     & Longitud fija $n$; rellena con espacios          \\
+			VARCHAR(n)            & Texto     & Longitud variable hasta $n$ caracteres           \\
+			TEXT                  & Texto     & Hasta 65\,535 bytes; sin valor DEFAULT           \\
+			DATE                  & Fecha     & Formato \texttt{YYYY-MM-DD}                      \\
+			DATETIME              & Fecha/hora& Formato \texttt{YYYY-MM-DD HH:MM:SS}             \\
+			TIMESTAMP             & Fecha/hora& UTC; se actualiza automáticamente con \texttt{ON UPDATE} \\
+			BOOLEAN / TINYINT(1)  & Lógico    & MySQL almacena booleanos como \texttt{TINYINT(1)} \\
+			ENUM('a','b',\ldots)  & Catálogo  & Solo acepta los valores de la lista              \\
+			\bottomrule
+		\end{tabularx}
+	\end{table}
+	
+	\begin{ejemplo}
+		Tabla completa con varios tipos de datos, restricciones y opciones:
+		
+		\begin{lstlisting}[style=sql, caption={CREATE TABLE con opciones reales de producción}]
+			CREATE TABLE IF NOT EXISTS productos (
+			producto_id   INT UNSIGNED     NOT NULL AUTO_INCREMENT,
+			sku           VARCHAR(30)      NOT NULL,
+			nombre        VARCHAR(120)     NOT NULL,
+			descripcion   TEXT,
+			precio        DECIMAL(10,2)    NOT NULL DEFAULT 0.00,
+			stock         INT UNSIGNED     NOT NULL DEFAULT 0,
+			activo        TINYINT(1)       NOT NULL DEFAULT 1,
+			categoria_id  INT UNSIGNED     NOT NULL,
+			creado_en     DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			actualizado   TIMESTAMP        NOT NULL
+			DEFAULT CURRENT_TIMESTAMP
+			ON UPDATE CURRENT_TIMESTAMP,
+			
+			PRIMARY KEY (producto_id),
+			UNIQUE  KEY uq_sku (sku),
+			CONSTRAINT chk_precio CHECK (precio >= 0),
+			CONSTRAINT fk_prod_cat
+			FOREIGN KEY (categoria_id)
+			REFERENCES categorias(categoria_id)
+			ON DELETE RESTRICT
+			ON UPDATE CASCADE
+			)
+			ENGINE  = InnoDB
+			CHARSET = utf8mb4
+			COLLATE = utf8mb4_unicode_ci;
+		\end{lstlisting}
+	\end{ejemplo}
+	
+	\subsection{Restricciones de Integridad}
+	
+	\subsubsection{\texttt{NOT NULL}}
+	
+	\begin{definicion}{NOT NULL}
+		Prohíbe que una columna almacene el valor \texttt{NULL}. Toda inserción o
+		actualización que no suministre un valor para esa columna — y que no tenga
+		\texttt{DEFAULT} definido — será rechazada por el motor.
+	\end{definicion}
+	
+	\begin{lstlisting}[style=sql, caption={Columnas con y sin NOT NULL}]
+		CREATE TABLE empleados (
+		empleado_id  INT          NOT NULL AUTO_INCREMENT,
+		nombre       VARCHAR(100) NOT NULL,   -- obligatorio
+		telefono     VARCHAR(20)  NULL,       -- opcional (admite NULL)
+		correo       VARCHAR(120) NOT NULL,
+		PRIMARY KEY (empleado_id)
+		);
+	\end{lstlisting}
+	
+	\begin{nota}
+		Omitir \texttt{NOT NULL} equivale implícitamente a \texttt{NULL} en MySQL.
+		Declararlo de forma explícita mejora la legibilidad y la intención del
+		esquema.
+	\end{nota}
+	
+	\subsubsection{\texttt{UNIQUE}}
+	
+	\begin{definicion}{UNIQUE}
+		Garantiza que todos los valores de una columna (o combinación de columnas)
+		sean distintos dentro de la tabla. A diferencia de \texttt{PRIMARY KEY},
+		una tabla puede tener \textbf{múltiples} restricciones \texttt{UNIQUE} y
+		estas \textbf{sí permiten} el valor \texttt{NULL} (con matices según el
+		motor).
+	\end{definicion}
+	
+	\begin{lstlisting}[style=sql, caption={UNIQUE a nivel de columna y de tabla}]
+		CREATE TABLE usuarios (
+		usuario_id  INT          UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+		correo      VARCHAR(120) NOT NULL UNIQUE,          -- nivel columna
+		username    VARCHAR(50)  NOT NULL,
+		doc_tipo    CHAR(3)      NOT NULL,
+		doc_numero  VARCHAR(20)  NOT NULL,
+		
+		-- UNIQUE compuesto a nivel de tabla
+		UNIQUE KEY uq_documento (doc_tipo, doc_numero)
+		);
+	\end{lstlisting}
+	
+	\begin{table}[H]
+		\centering
+		\caption{Diferencias entre \texttt{UNIQUE} y \texttt{PRIMARY KEY}}
+		\renewcommand{\arraystretch}{1.3}
+		\rowcolors{2}{gray!10}{white}
+		\begin{tabularx}{\textwidth}{l X X}
+			\toprule
+			\textbf{Característica} & \textbf{PRIMARY KEY}          & \textbf{UNIQUE}                      \\
+			\midrule
+			Cantidad por tabla      & Solo una                      & Múltiples                            \\
+			Admite NULL             & No                            & Sí (un NULL por columna en MySQL)    \\
+			Índice generado         & Clúster (InnoDB)              & Secundario no clúster                \\
+			Uso habitual            & Identificador de fila         & Atributos alternativos únicos        \\
+			\bottomrule
+		\end{tabularx}
+	\end{table}
+	
+	\subsubsection{\texttt{PRIMARY KEY}}
+	
+	\begin{definicion}{PRIMARY KEY}
+		Identifica de forma \textbf{única e irrepetible} cada fila de la tabla.
+		Implica \texttt{NOT NULL} y \texttt{UNIQUE} de forma automática. Puede
+		ser \textbf{simple} (una columna) o \textbf{compuesta} (varias columnas).
+	\end{definicion}
+	
+	\begin{lstlisting}[style=sql, caption={PK simple vs.\ PK compuesta}]
+		-- Clave primaria simple (columna única)
+		CREATE TABLE categorias (
+		categoria_id  INT UNSIGNED AUTO_INCREMENT,
+		nombre        VARCHAR(80) NOT NULL,
+		PRIMARY KEY (categoria_id)
+		);
+		
+		-- Clave primaria compuesta (tabla intermedia N:M)
+		CREATE TABLE inscripciones (
+		estudiante_id  INT UNSIGNED NOT NULL,
+		curso_id       INT UNSIGNED NOT NULL,
+		fecha_alta     DATE         NOT NULL,
+		PRIMARY KEY (estudiante_id, curso_id)   -- par debe ser único
+		);
+	\end{lstlisting}
+	
+	\begin{nota}
+		En InnoDB, la \texttt{PRIMARY KEY} determina el \textbf{índice clúster}:
+		las filas se almacenan físicamente ordenadas por ella. Elegir una PK de
+		tipo entero secuencial (\texttt{AUTO\_INCREMENT}) produce inserciones más
+		eficientes que una PK de tipo cadena o UUID aleatorio.
+	\end{nota}
+	
+	\subsubsection{\texttt{CHECK}}
+	
+	\begin{definicion}{CHECK}
+		Valida que el valor de una columna cumpla una \textbf{expresión booleana}
+		antes de aceptar la inserción o actualización. Si la expresión devuelve
+		\texttt{FALSE}, la operación es rechazada. Disponible en MySQL a partir
+		de la versión~8.0.16.
+	\end{definicion}
+	
+	\begin{lstlisting}[style=sql, caption={CHECK a nivel de columna y de tabla}]
+		CREATE TABLE contratos (
+		contrato_id   INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+		fecha_inicio  DATE         NOT NULL,
+		fecha_fin     DATE,
+		salario       DECIMAL(10,2) NOT NULL,
+		CONSTRAINT chk_fecha CHECK (fecha_fin > fecha_inicio),
+		CONSTRAINT chk_salario CHECK (salario > 0)
+		);
+	\end{lstlisting}
+	
+	\subsubsection{\texttt{FOREIGN KEY}}
+	
+	\begin{definicion}{FOREIGN KEY}
+		Establece una \textbf{integridad referencial}: la columna o combinación
+		de columnas debe coincidir con valores que existen en la clave primaria
+		de otra tabla (la tabla referenciada). Las acciones \texttt{ON DELETE}
+		y \texttt{ON UPDATE} especifican qué sucede cuando se modifica la
+		tabla padre.
+	\end{definicion}
+	
+	\begin{lstlisting}[style=sql, caption={FOREIGN KEY con políticas de actualización}]
+		CREATE TABLE pedidos (
+		pedido_id   INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+		cliente_id  INT UNSIGNED NOT NULL,
+		fecha       DATE NOT NULL,
+		FOREIGN KEY (cliente_id) REFERENCES clientes(cliente_id)
+		ON DELETE RESTRICT      -- no permite eliminar si hay pedidos
+		ON UPDATE CASCADE       -- actualiza el ID si cambia en clientes
+		);
+	\end{lstlisting}
+	
+	\subsubsection{\texttt{DEFAULT}}
+	
+	\begin{definicion}{DEFAULT}
+		Asigna un valor automático a una columna cuando no se proporciona
+		uno durante una inserción. Acelera la entrada de datos y reduce
+		valores \texttt{NULL} innecesarios.
+	\end{definicion}
+	
+	\begin{lstlisting}[style=sql, caption={DEFAULT con valores estáticos y dinámicos}]
+		-- DEFAULT con valores estáticos
+		CREATE TABLE usuarios (
+		usuario_id   INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+		activo       TINYINT(1) DEFAULT 1,
+		saldo        DECIMAL(10,2) DEFAULT 0.00,
+		fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP
+		);
+	\end{lstlisting}
+	
+	\subsubsection{\texttt{AUTO\_INCREMENT}}
+	
+	\begin{definicion}{AUTO\_INCREMENT}
+		Genera automáticamente valores enteros secuenciales para una columna
+		en cada nueva inserción. Solo puede haber un \texttt{AUTO\_INCREMENT}
+		por tabla y típicamente se usa con \texttt{PRIMARY KEY}.
+	\end{definicion}
+	
+	\begin{lstlisting}[style=sql, caption={AUTO\_INCREMENT en contexto}]
+		CREATE TABLE productos (
+		producto_id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+		nombre      VARCHAR(120) NOT NULL,
+		PRIMARY KEY (producto_id)
+		);
+		
+		-- El valor inicial es 1 por defecto
+		ALTER TABLE productos AUTO_INCREMENT = 1000;  -- cambiar inicio
+	\end{lstlisting}
+	
+	\begin{nota}
+		El contador \texttt{AUTO\_INCREMENT} \textbf{nunca retrocede} al eliminar
+		filas. Si se inserta y luego se borra el registro con \texttt{ID = 1005},
+		el siguiente ID será~\texttt{1006}, no~\texttt{1005}. Esto es intencional
+		para evitar colisiones en entornos concurrentes.
+	\end{nota}
+	
+	\subsection{\texttt{DROP TABLE}}
+	
+	\begin{definicion}{DROP TABLE}
+		Elimina una tabla de forma \textbf{permanente e irreversible}: borra la
+		estructura, todos sus datos y los índices asociados. No puede deshacerse
+		con \texttt{ROLLBACK}.
+	\end{definicion}
+	
+	\begin{lstlisting}[style=sql, caption={DROP TABLE básico y con guarda}]
+		-- Falla con error si la tabla no existe
+		DROP TABLE pedidos;
+		
+		-- No genera error si la tabla no existe
+		DROP TABLE IF EXISTS pedidos;
+		
+		-- Eliminar varias tablas en una sola sentencia
+		DROP TABLE IF EXISTS inscripciones, pedidos, sesiones;
+	\end{lstlisting}
+	
+	\textbf{Orden correcto con claves foráneas:}
+	
+	\begin{lstlisting}[style=sql, caption={DROP TABLE respetando integridad referencial}]
+		-- ERROR: no se puede eliminar 'clientes' mientras 'pedidos' la referencia
+		DROP TABLE clientes;   -- falla
+		
+		-- Correcto: eliminar primero la tabla HIJO, luego la tabla PADRE
+		DROP TABLE IF EXISTS pedidos;    -- hijo (tiene la FK)
+		DROP TABLE IF EXISTS clientes;   -- padre (tiene la PK referenciada)
+	\end{lstlisting}
+	
+	\begin{nota}
+		Como alternativa al orden manual, es posible deshabilitar
+		temporalmente la comprobación de claves foráneas. Esta práctica debe
+		usarse con extrema cautela y solo en scripts de mantenimiento
+		controlados:
+		\begin{lstlisting}[style=sql, caption={Deshabilitar FK solo para scripts de mantenimiento}]
+			SET FOREIGN_KEY_CHECKS = 0;
+			DROP TABLE IF EXISTS clientes, pedidos;
+			SET FOREIGN_KEY_CHECKS = 1;
+		\end{lstlisting}
+	\end{nota}
+	
+	\subsection{\texttt{ALTER TABLE}}
+	
+	\begin{definicion}{ALTER TABLE}
+		Modifica la \textbf{estructura} de una tabla existente sin necesidad de
+		recrearla. Permite agregar, renombrar, modificar y eliminar columnas, así
+		como gestionar restricciones e índices.
+	\end{definicion}
+	
+	\subsubsection{\texttt{ADD}}
+	
+	Agrega nuevas columnas o restricciones a una tabla existente.
+	
+	\begin{lstlisting}[style=sql, caption={ADD COLUMN — agregar columnas}]
+		-- Agregar una columna al final (comportamiento por defecto)
+		ALTER TABLE productos
+		ADD COLUMN descuento DECIMAL(5,2) NOT NULL DEFAULT 0.00;
+		
+		-- Agregar una columna en una posición específica
+		ALTER TABLE productos
+		ADD COLUMN imagen_url VARCHAR(255) NULL
+		AFTER nombre;
+		
+		-- Agregar al principio
+		ALTER TABLE productos
+		ADD COLUMN prioridad TINYINT NOT NULL DEFAULT 0
+		FIRST;
+	\end{lstlisting}
+	
+	\begin{lstlisting}[style=sql, caption={ADD CONSTRAINT — agregar restricciones}]
+		-- Agregar índice UNIQUE
+		ALTER TABLE usuarios
+		ADD CONSTRAINT uq_correo UNIQUE (correo);
+		
+		-- Agregar clave foránea
+		ALTER TABLE pedidos
+		ADD CONSTRAINT fk_pedido_cliente
+		FOREIGN KEY (cliente_id) REFERENCES clientes(cliente_id)
+		ON DELETE RESTRICT ON UPDATE CASCADE;
+		
+		-- Agregar CHECK
+		ALTER TABLE productos
+		ADD CONSTRAINT chk_descuento CHECK (descuento BETWEEN 0 AND 100);
+	\end{lstlisting}
+	
+	\subsubsection{\texttt{RENAME COLUMN}}
+	
+	Cambia el nombre de una columna preservando su tipo, restricciones y datos.
+	Disponible en MySQL~8.0+.
+	
+	\begin{lstlisting}[style=sql, caption={RENAME COLUMN}]
+		-- Renombrar una columna (MySQL 8.0+)
+		ALTER TABLE clientes
+		RENAME COLUMN telefono TO telefono_principal;
+		
+		-- Renombrar varias columnas en una sola sentencia
+		ALTER TABLE productos
+		RENAME COLUMN img_url   TO imagen_url,
+		RENAME COLUMN desc_prod TO descripcion;
+	\end{lstlisting}
+	
+	\begin{nota}
+		En versiones anteriores a MySQL~8.0, el renombrado se realiza con
+		\texttt{CHANGE COLUMN}, que requiere repetir el tipo de dato:
+		\begin{lstlisting}[style=sql, caption={CHANGE COLUMN para MySQL anterior a 8.0}]
+			ALTER TABLE clientes
+			CHANGE COLUMN telefono telefono_principal VARCHAR(20) NULL;
+		\end{lstlisting}
+	\end{nota}
+	
+	\subsubsection{\texttt{MODIFY COLUMN}}
+	
+	Cambia el \textbf{tipo de dato}, las restricciones o las opciones de una
+	columna existente sin alterar su nombre.
+	
+	\begin{lstlisting}[style=sql, caption={MODIFY COLUMN — cambios de tipo y propiedades}]
+		-- Ampliar el tamaño de un VARCHAR
+		ALTER TABLE productos
+		MODIFY COLUMN nombre VARCHAR(200) NOT NULL;
+		
+		-- Cambiar tipo y agregar restricción
+		ALTER TABLE contratos
+		MODIFY COLUMN salario DECIMAL(12,2) NOT NULL DEFAULT 0.00;
+		
+		-- Cambiar posición de la columna
+		ALTER TABLE empleados
+		MODIFY COLUMN correo VARCHAR(120) NOT NULL AFTER nombre;
+	\end{lstlisting}
+	
+	\begin{nota}
+		\texttt{MODIFY COLUMN} reescribe la definición completa de la columna.
+		Omitir \texttt{NOT NULL} o \texttt{DEFAULT} los elimina, aunque el dato
+		ya exista. Siempre verificar la definición actual con \texttt{DESCRIBE}
+		antes de modificar.
+	\end{nota}
+	
+	\subsubsection{\texttt{DROP COLUMN}}
+	
+	Elimina una columna y \textbf{todos sus datos} de forma permanente.
+	
+	\begin{lstlisting}[style=sql, caption={DROP COLUMN}]
+		-- Eliminar una columna
+		ALTER TABLE productos
+		DROP COLUMN imagen_url;
+		
+		-- Eliminar varias columnas en una sola sentencia
+		ALTER TABLE empleados
+		DROP COLUMN fax,
+		DROP COLUMN extension;
+		
+		-- Eliminar una restricción antes de poder borrar la columna
+		ALTER TABLE pedidos
+		DROP FOREIGN KEY fk_pedido_cliente,
+		DROP COLUMN cliente_id;
+	\end{lstlisting}
+	
+	\begin{nota}
+		Si la columna forma parte de un índice o restricción, MySQL exige
+		eliminar primero esa dependencia. Usar \texttt{SHOW CREATE TABLE}
+		para identificar los nombres exactos de índices y claves foráneas
+		antes de ejecutar el \texttt{DROP}.
+	\end{nota}
+	
+	%==============================================================
+	% PARTE III: CONSULTA DE DATOS
+	%==============================================================
+	
+	\newpage
+	\section{Consulta de Datos: \texttt{SELECT}}
+	
+	La instrucción \texttt{SELECT} es, sin duda, la más utilizada y la
+	más rica en posibilidades de todo el lenguaje SQL.
+	Su propósito es \textbf{consultar} datos: extraer filas de una o
+	varias tablas, aplicarles filtros, transformaciones y ordenamientos,
+	y devolver un resultado tabular.
+	A diferencia de \texttt{INSERT}, \texttt{UPDATE} o \texttt{DELETE},
+	\texttt{SELECT} es una operación de \textbf{sólo lectura}: nunca
+	modifica los datos almacenados.
+	
+	\subsection{Sintaxis completa y cláusulas}
+	
+	La sintaxis formal de \texttt{SELECT} en MySQL/SQL estándar es la
+	siguiente.
+	Las partes entre corchetes \texttt{[ ]} son opcionales; las palabras
+	en mayúsculas son palabras reservadas de SQL:
+	
+	\begin{lstlisting}[caption={Sintaxis completa de SELECT.}]
+		SELECT  [ALL | DISTINCT | DISTINCTROW]
+		lista_de_columnas | *
+		FROM    nombre_tabla  [[AS] alias_tabla]
+		[WHERE      condicion]
+		[GROUP BY   columna [ASC | DESC], ...]
+		[HAVING     condicion_de_grupo]
+		[ORDER BY   columna [ASC | DESC], ...]
+		[LIMIT      numero_de_filas  [OFFSET desplazamiento]];
+	\end{lstlisting}
+	
+	Cada cláusula tiene un rol preciso dentro de la consulta.
+	La \cref{tab:clausulas-select} resume su función y el orden en que
+	el SGBD las \textit{evalúa} internamente (que no siempre coincide
+	con el orden en que se escriben):
+	
+	\begin{table}[H]
+		\centering
+		\small
+		\renewcommand{\arraystretch}{1.4}
+		\begin{tabularx}{\linewidth}{@{} l c X @{}}
+			\toprule
+			\textbf{Cláusula} & \textbf{Orden eval.} & \textbf{Función} \\
+			\midrule
+			\texttt{FROM}     & 1 & Determina la(s) tabla(s) fuente de datos. \\
+			\texttt{WHERE}    & 2 & Filtra filas \textit{antes} de agrupar. \\
+			\texttt{GROUP BY} & 3 & Agrupa filas con valores iguales en las columnas indicadas. \\
+			\texttt{HAVING}   & 4 & Filtra grupos \textit{después} de agrupar. \\
+			\texttt{SELECT}   & 5 & Proyecta (selecciona) las columnas del resultado. \\
+			\texttt{DISTINCT} & 6 & Elimina filas duplicadas del resultado proyectado. \\
+			\texttt{ORDER BY} & 7 & Ordena el resultado final. \\
+			\texttt{LIMIT}    & 8 & Recorta el número de filas devueltas. \\
+			\bottomrule
+		\end{tabularx}
+		\caption{Cláusulas de \texttt{SELECT} y su orden de evaluación interno.}
+		\label{tab:clausulas-select}
+	\end{table}
+	
+	\begin{nota}
+		El orden de \textbf{escritura} de las cláusulas es fijo y debe
+		respetarse exactamente como aparece en la sintaxis de arriba.
+		Sin embargo, el SGBD las \textbf{evalúa} en un orden diferente
+		(véase \cref{tab:clausulas-select}).
+		Esto explica, por ejemplo, por qué no se puede usar un alias
+		definido en \texttt{SELECT} dentro de la cláusula \texttt{WHERE}:
+		\texttt{WHERE} se evalúa \textit{antes} de que exista el alias.
+	\end{nota}
+	
+	\subsection{Tabla de ejemplo}
+	
+	Para ilustrar todos los ejemplos de esta sección usaremos una tabla
+	llamada \texttt{empleados} con la siguiente estructura y datos:
+	
+	\begin{lstlisting}[caption={Creación e inicialización de la tabla \texttt{empleados}.}]
+		CREATE TABLE empleados (
+		id          INT          PRIMARY KEY AUTO_INCREMENT,
+		nombre      VARCHAR(60)  NOT NULL,
+		departamento VARCHAR(40) NOT NULL,
+		cargo       VARCHAR(40)  NOT NULL,
+		salario     DECIMAL(10,2) NOT NULL,
+		fecha_ingreso DATE        NOT NULL
+		);
+		
+		INSERT INTO empleados (nombre, departamento, cargo, salario, fecha_ingreso) VALUES
+		('Ana García',      'Ventas',     'Gerente',    55000.00, '2018-03-15'),
+		('Luis Herrera',    'Ventas',     'Analista',   32000.00, '2020-07-01'),
+		('Sofía Ramírez',   'TI',         'Desarrolladora', 48000.00, '2019-11-20'),
+		('Carlos Mendoza',  'TI',         'DBA',        51000.00, '2017-05-10'),
+		('Elena Torres',    'RRHH',       'Coordinadora', 38000.00, '2021-02-28'),
+		('Marco Villanueva','Ventas',     'Analista',   31000.00, '2022-09-05'),
+		('Patricia Luna',   'TI',         'Desarrolladora', 47000.00, '2020-04-14'),
+		('Roberto Salas',   'RRHH',       'Gerente',    52000.00, '2016-08-22'),
+		('Diana Castillo',  'Finanzas',   'Analista',   39000.00, '2023-01-10'),
+		('Javier Moreno',   'Finanzas',   'Gerente',    58000.00, '2015-06-30');
+	\end{lstlisting}
+	
+	\subsection{Proyección de columnas: \texttt{SELECT *} y columnas específicas}
+	
+	La \textbf{proyección} es la operación de elegir qué columnas
+	aparecerán en el resultado.
+	El asterisco \texttt{*} es un comodín que significa
+	\textit{``todas las columnas''}.
+	
+	\begin{lstlisting}[caption={Seleccionar todas las columnas.}]
+		-- Devuelve todas las columnas de todos los empleados
+		SELECT *
+		FROM empleados;
+	\end{lstlisting}
+	
+	\begin{lstlisting}[caption={Seleccionar columnas específicas.}]
+		-- Sólo nombre, departamento y salario
+		SELECT nombre, departamento, salario
+		FROM empleados;
+	\end{lstlisting}
+	
+	\begin{nota}
+		En producción se recomienda \textbf{evitar} \texttt{SELECT *} porque:
+		(1) transfiere columnas innecesarias por la red,
+		(2) si alguien agrega una columna sensible a la tabla, la consulta
+		la expondrá automáticamente,
+		(3) dificulta la legibilidad del código.
+		Úsalo sólo para exploración interactiva.
+	\end{nota}
+	
+	También es posible incluir \textbf{expresiones} en la lista de
+	columnas: literales, operaciones aritméticas o llamadas a funciones:
+	
+	\begin{lstlisting}[caption={Columnas calculadas y literales en SELECT.}]
+		SELECT
+		nombre,
+		salario,
+		salario * 12          AS salario_anual,
+		salario * 0.10        AS bono_estimado,
+		'Activo'              AS estado   -- literal de texto
+		FROM empleados;
+	\end{lstlisting}
+	
+	\subsection{Operadores aritméticos}
+	
+	Dentro de \texttt{SELECT} (y también en \texttt{WHERE}) se pueden
+	usar operadores aritméticos estándar sobre columnas numéricas:
+	
+	\begin{table}[H]
+		\centering
+		\small
+		\renewcommand{\arraystretch}{1.4}
+		\begin{tabularx}{\linewidth}{@{} c l X @{}}
+			\toprule
+			\textbf{Op.} & \textbf{Nombre} & \textbf{Ejemplo} \\
+			\midrule
+			\texttt{+}  & Suma            & \texttt{salario + 5000} \\
+			\texttt{-}  & Resta           & \texttt{salario - descuento} \\
+			\texttt{*}  & Multiplicación  & \texttt{salario * 1.15} \\
+			\texttt{/}  & División        & \texttt{salario / 14} \\
+			\texttt{\%} & Módulo (resto)  & \texttt{id \% 2} (par/impar) \\
+			\bottomrule
+		\end{tabularx}
+		\caption{Operadores aritméticos en SQL.}
+		\label{tab:operadores-aritmeticos}
+	\end{table}
+	
+	\begin{lstlisting}[caption={Uso de operadores aritméticos.}]
+		SELECT
+		nombre,
+		salario,
+		salario * 1.15        AS salario_con_aumento,
+		(salario / 30)        AS salario_diario,
+		salario - 5000        AS salario_base
+		FROM empleados
+		WHERE departamento = 'TI';
+	\end{lstlisting}
+	
+	\subsection{Operadores de comparación}
+	
+	Los operadores de comparación se usan principalmente en la cláusula
+	\texttt{WHERE} para filtrar filas.
+	Devuelven un valor booleano (\texttt{TRUE} o \texttt{FALSE}):
+	
+	\begin{table}[H]
+		\centering
+		\small
+		\renewcommand{\arraystretch}{1.4}
+		\begin{tabularx}{\linewidth}{@{} c l X @{}}
+			\toprule
+			\textbf{Operador} & \textbf{Significado} & \textbf{Ejemplo} \\
+			\midrule
+			\texttt{=}    & Igual a              & \texttt{departamento = 'Ventas'} \\
+			\texttt{<>} o \texttt{!=} & Distinto de & \texttt{cargo <> 'Gerente'} \\
+			\texttt{>}    & Mayor que            & \texttt{salario > 40000} \\
+			\texttt{<}    & Menor que            & \texttt{salario < 35000} \\
+			\texttt{>=}   & Mayor o igual que    & \texttt{salario >= 50000} \\
+			\texttt{<=}   & Menor o igual que    & \texttt{salario <= 48000} \\
+			\bottomrule
+		\end{tabularx}
+		\caption{Operadores de comparación en SQL.}
+		\label{tab:operadores-comparacion}
+	\end{table}
+	
+	\begin{lstlisting}[caption={Filtros con operadores de comparación.}]
+		-- Empleados con salario mayor a 45,000
+		SELECT nombre, cargo, salario
+		FROM   empleados
+		WHERE  salario > 45000;
+		
+		-- Empleados que NO son del departamento de TI
+		SELECT nombre, departamento
+		FROM   empleados
+		WHERE  departamento <> 'TI';
+		
+		-- Empleados con salario entre 30,000 y 40,000 (inclusive)
+		SELECT nombre, salario
+		FROM   empleados
+		WHERE  salario >= 30000
+		AND  salario <= 40000;
+	\end{lstlisting}
+	
+	%==============================================================
+	\section{Modificadores: Filtrado, Ordenamiento y Agrupación}
+	
+	Los \textbf{modificadores} son cláusulas y operadores que se
+	combinan con \texttt{SELECT} para refinar, filtrar y ordenar los
+	resultados de una consulta.
+	En esta sección cubrimos los modificadores fundamentales que
+	todo programador SQL debe dominar.
+	
+	\subsection{\texttt{DISTINCT}}
+	
+	Por defecto, \texttt{SELECT} devuelve \textbf{todas} las filas que
+	satisfacen la consulta, incluyendo duplicados.
+	La palabra clave \texttt{DISTINCT} instruye al SGBD a eliminar las
+	filas repetidas del resultado, conservando sólo valores únicos.
+	
+	\begin{definicion}{\texttt{DISTINCT}}
+		Modificador que se coloca inmediatamente después de \texttt{SELECT}
+		y elimina del resultado todas las filas cuyo conjunto de valores en
+		las columnas proyectadas sea idéntico a otra fila ya presente.
+	\end{definicion}
+	
+	\begin{lstlisting}[caption={DISTINCT sobre una columna.}]
+		-- ¿Qué departamentos existen en la empresa?
+		-- Sin DISTINCT aparecerían 10 filas (una por empleado)
+		SELECT DISTINCT departamento
+		FROM   empleados;
+	\end{lstlisting}
+	
+	\begin{lstlisting}[caption={DISTINCT sobre múltiples columnas.}]
+		-- Combinaciones únicas de departamento + cargo
+		SELECT DISTINCT departamento, cargo
+		FROM   empleados
+		ORDER BY departamento, cargo;
+	\end{lstlisting}
+	
+	\begin{nota}
+		\texttt{DISTINCT} opera sobre la \textit{combinación completa} de
+		todas las columnas proyectadas, no columna por columna.
+	\end{nota}
+	
+	\subsection{\texttt{WHERE}}
+	
+	La cláusula \texttt{WHERE} es el mecanismo de \textbf{filtrado por
+		fila} de SQL.
+	Evalúa una condición booleana para cada fila de la tabla fuente;
+	sólo las filas donde la condición resulta \texttt{TRUE} pasan al
+	resultado.
+	
+	\begin{definicion}{\texttt{WHERE}}
+		Cláusula que restringe las filas devueltas por una consulta a
+		aquellas que satisfacen una expresión booleana dada.
+		Se evalúa \textit{antes} de \texttt{GROUP BY}, \texttt{HAVING} y
+		\texttt{SELECT}.
+	\end{definicion}
+	
+	\begin{lstlisting}[caption={Filtros básicos con WHERE.}]
+		-- Empleados del departamento de TI
+		SELECT nombre, cargo, salario
+		FROM   empleados
+		WHERE  departamento = 'TI';
+		
+		-- Empleados con salario mayor a 45,000
+		SELECT nombre, salario
+		FROM   empleados
+		WHERE  salario > 45000;
+		
+		-- Empleados que ingresaron después del 1 de enero de 2020
+		SELECT nombre, fecha_ingreso
+		FROM   empleados
+		WHERE  fecha_ingreso > '2020-01-01';
+	\end{lstlisting}
+	
+	\subsection{\texttt{ORDER BY}}
+	
+	\texttt{ORDER BY} define el \textbf{criterio de ordenamiento} del
+	resultado final.
+	Sin él, el SGBD no garantiza ningún orden particular entre
+	ejecuciones.
+	
+	\begin{lstlisting}[caption={Orden ascendente y descendente.}]
+		-- Orden ascendente (A → Z, menor → mayor): por defecto
+		SELECT nombre, salario
+		FROM   empleados
+		ORDER BY salario ASC;   -- ASC es opcional, es el valor por defecto
+		
+		-- Orden descendente (mayor → menor)
+		SELECT nombre, salario
+		FROM   empleados
+		ORDER BY salario DESC;
+	\end{lstlisting}
+	
+	\begin{lstlisting}[caption={Ordenamiento compuesto por múltiples columnas.}]
+		-- Primero por departamento (A→Z),
+		-- dentro de cada departamento por salario (mayor→menor)
+		SELECT nombre, departamento, salario
+		FROM   empleados
+		ORDER BY departamento ASC,
+		salario      DESC;
+	\end{lstlisting}
+	
+	\subsection{\texttt{LIKE}}
+	
+	\texttt{LIKE} permite comparar una columna de texto contra un
+	\textbf{patrón}, usando caracteres comodín.
+	Es la herramienta de búsqueda de texto parcial más básica de SQL.
+	
+	\begin{table}[H]
+		\centering
+		\small
+		\renewcommand{\arraystretch}{1.4}
+		\begin{tabularx}{\linewidth}{@{} c l X @{}}
+			\toprule
+			\textbf{Comodín} & \textbf{Significado} & \textbf{Ejemplo} \\
+			\midrule
+			\texttt{\%} & Cero o más caracteres cualesquiera
+			& \texttt{'Ana\%'} coincide con \texttt{Ana}, \texttt{Analista}, \texttt{Anabel} \\
+			\texttt{\_} & Exactamente un carácter cualquiera
+			& \texttt{'\_na'} coincide con \texttt{Ana}, \texttt{Ina}, \texttt{Una} \\
+			\bottomrule
+		\end{tabularx}
+		\caption{Comodines del operador \texttt{LIKE}.}
+		\label{tab:comodines-like}
+	\end{table}
+	
+	\begin{lstlisting}[caption={Patrones con LIKE.}]
+		-- Nombres que empiezan con 'A'
+		SELECT nombre FROM empleados
+		WHERE  nombre LIKE 'A%';
+		
+		-- Nombres que terminan con 'ez'
+		SELECT nombre FROM empleados
+		WHERE  nombre LIKE '%ez';
+		
+		-- Nombres que contienen 'ar' en cualquier posición
+		SELECT nombre FROM empleados
+		WHERE  nombre LIKE '%ar%';
+		
+		-- Nombres que NO contienen 'a' (NOT LIKE)
+		SELECT nombre FROM empleados
+		WHERE  nombre NOT LIKE '%a%';
+	\end{lstlisting}
+	
+	\begin{nota}
+		En MySQL, \texttt{LIKE} es \textbf{insensible a mayúsculas/minúsculas}
+		por defecto cuando la columna usa un \textit{collation} insensible.
+		Si necesitas distinguir mayúsculas usa \texttt{LIKE BINARY}.
+	\end{nota}
+	
+	\subsection{\texttt{AND}, \texttt{OR}, \texttt{NOT}}
+	
+	Los operadores lógicos permiten \textbf{combinar múltiples
+		condiciones} dentro de una cláusula \texttt{WHERE}.
+	
+	\begin{table}[H]
+		\centering
+		\small
+		\renewcommand{\arraystretch}{1.5}
+		\begin{tabularx}{\linewidth}{@{} l X X @{}}
+			\toprule
+			\textbf{Operador} & \textbf{Resultado TRUE cuando\ldots} & \textbf{Precedencia} \\
+			\midrule
+			\texttt{NOT} & La condición que sigue es \texttt{FALSE}
+			& Mayor (se evalúa primero) \\
+			\texttt{AND} & \textbf{Ambas} condiciones son \texttt{TRUE}
+			& Media \\
+			\texttt{OR}  & \textbf{Al menos una} condición es \texttt{TRUE}
+			& Menor (se evalúa al final) \\
+			\bottomrule
+		\end{tabularx}
+		\caption{Operadores lógicos y su precedencia.}
+		\label{tab:operadores-logicos}
+	\end{table}
+	
+	\begin{lstlisting}[caption={Uso de AND, OR y NOT.}]
+		-- AND: empleados de TI con salario mayor a 47,000
+		SELECT nombre, departamento, salario
+		FROM   empleados
+		WHERE  departamento = 'TI'
+		AND  salario > 47000;
+		
+		-- OR: empleados de Ventas O de Finanzas
+		SELECT nombre, departamento
+		FROM   empleados
+		WHERE  departamento = 'Ventas'
+		OR   departamento = 'Finanzas';
+		
+		-- NOT: empleados que NO son gerentes
+		SELECT nombre, cargo
+		FROM   empleados
+		WHERE  NOT cargo = 'Gerente';
+		-- equivalente: WHERE cargo <> 'Gerente'
+	\end{lstlisting}
+	
+	\subsection{\texttt{IN} y \texttt{BETWEEN}}
+	
+	\begin{lstlisting}[caption={IN para búsquedas en conjuntos.}]
+		-- Empleados en los departamentos Ventas, TI o Finanzas
+		SELECT nombre, departamento
+		FROM   empleados
+		WHERE  departamento IN ('Ventas', 'TI', 'Finanzas');
+		
+		-- Equivalente usando OR (menos legible)
+		WHERE  departamento = 'Ventas'
+		OR departamento = 'TI'
+		OR departamento = 'Finanzas';
+	\end{lstlisting}
+	
+	\begin{lstlisting}[caption={BETWEEN para rangos.}]
+		-- Empleados con salario entre 40,000 y 50,000 (inclusive)
+		SELECT nombre, salario
+		FROM   empleados
+		WHERE  salario BETWEEN 40000 AND 50000;
+		
+		-- Equivalente usando AND (menos legible)
+		WHERE  salario >= 40000
+		AND  salario <= 50000;
+	\end{lstlisting}
+	
+	\subsection{\texttt{GROUP BY} y \texttt{HAVING}}
+	
+	\texttt{GROUP BY} divide las filas en grupos según los valores
+	de una o más columnas. Típicamente se combina con funciones de
+	\textbf{agregación} (\texttt{COUNT}, \texttt{SUM}, \texttt{AVG},
+	\texttt{MIN}, \texttt{MAX}) para calcular resúmenes por grupo.
+	
+	\begin{definicion}{GROUP BY}
+		Cláusula que divide las filas del resultado de \texttt{WHERE} en
+		grupos, donde cada grupo comparte el mismo valor en las columnas
+		de agrupamiento.
+		Cada grupo produce exactamente \textbf{una fila} en el resultado.
+	\end{definicion}
+	
+	\begin{lstlisting}[caption={GROUP BY con funciones de agregación.}]
+		-- Número de empleados y salario promedio por departamento
+		SELECT departamento,
+		COUNT(*)           AS num_empleados,
+		ROUND(AVG(salario), 2) AS promedio,
+		SUM(salario)       AS masa_salarial,
+		MIN(salario)       AS minimo,
+		MAX(salario)       AS maximo
+		FROM   empleados
+		GROUP BY departamento
+		ORDER BY masa_salarial DESC;
+	\end{lstlisting}
+	
+	\texttt{HAVING} filtra \textbf{grupos} (no filas individuales).
+	Es el equivalente de \texttt{WHERE} pero aplicado después de que
+	\texttt{GROUP BY} ha formado los grupos.
+	
+	\begin{definicion}{\texttt{HAVING}}
+		Cláusula que filtra los grupos producidos por \texttt{GROUP BY},
+		conservando sólo aquellos cuya condición (generalmente sobre
+		una función de agregación) es \texttt{TRUE}.
+	\end{definicion}
+	
+	\begin{lstlisting}[caption={HAVING: filtrar grupos por condición agregada.}]
+		-- Departamentos donde el salario promedio supera 45,000
+		SELECT departamento,
+		ROUND(AVG(salario), 2) AS promedio
+		FROM   empleados
+		GROUP BY departamento
+		HAVING AVG(salario) > 45000;
+		
+		-- Departamentos con más de 2 empleados
+		SELECT departamento,
+		COUNT(*) AS num_empleados
+		FROM   empleados
+		GROUP BY departamento
+		HAVING COUNT(*) > 2;
+	\end{lstlisting}
+	
+	\begin{nota}
+		La diferencia entre \texttt{WHERE} y \texttt{HAVING}:
+		\texttt{WHERE} descarta filas \textit{antes} de agrupar
+		(actúa sobre datos individuales);
+		\texttt{HAVING} descarta grupos \textit{después} de agrupar
+		(actúa sobre resultados de agregación).
+	\end{nota}
+	
+	\subsection{\texttt{CASE}}
+	
+	\texttt{CASE} es la expresión de \textbf{lógica condicional} de SQL:
+	permite evaluar condiciones dentro de una consulta y devolver
+	valores diferentes según cuál se cumpla.
+	
+	\begin{lstlisting}[caption={CASE buscado (evalúa condiciones booleanas).}]
+		-- Clasifica el salario en bandas
+		SELECT nombre,
+		salario,
+		CASE
+		WHEN salario >= 55000 THEN 'Banda A (Senior)'
+		WHEN salario >= 45000 THEN 'Banda B (Mid)'
+		WHEN salario >= 35000 THEN 'Banda C (Junior)'
+		ELSE                       'Banda D (Entrada)'
+		END AS banda_salarial
+		FROM   empleados
+		ORDER BY salario DESC;
+	\end{lstlisting}
+	
+	\subsection{\texttt{COALESCE} e \texttt{IFNULL}}
+	
+	Ambas funciones permiten sustituir un valor \texttt{NULL} por un
+	valor alternativo.
+	
+	\begin{lstlisting}[caption={COALESCE: devuelve el primer valor no NULL.}]
+		-- Devuelve el primer contacto disponible entre tres opciones
+		SELECT nombre,
+		COALESCE(telefono_celular,
+		telefono_fijo,
+		email,
+		'Sin contacto') AS contacto_preferido
+		FROM   empleados;
+	\end{lstlisting}
+	
+	\begin{nota}
+		\texttt{IFNULL(a, b)} es equivalente a \texttt{COALESCE(a, b)},
+		pero \texttt{COALESCE} acepta cualquier número de argumentos y
+		es parte del estándar SQL.
+		Prefiere \texttt{COALESCE} para mayor portabilidad.
+	\end{nota}
+	
+	\subsection{Combinación de tablas: \texttt{JOIN}}
+	
+	El operador \texttt{JOIN} combina filas de dos o más tablas basándose
+	en una condición de asociación (típicamente igualdad de clave foránea
+	y clave primaria).
+	
+	\subsubsection{\texttt{INNER JOIN}}
+	
+	\begin{definicion}{INNER JOIN}
+		Devuelve solo las filas donde existe una coincidencia exacta en ambas
+		tablas. Si una fila de la tabla izquierda no tiene par en la tabla
+		derecha, se descarta completamente.
+	\end{definicion}
+	
+	\textbf{Sintaxis general:}
+	
+	\begin{lstlisting}[style=sql, caption={Sintaxis de INNER JOIN}]
+		SELECT columnas
+		FROM tabla_izquierda
+		INNER JOIN tabla_derecha
+		ON tabla_izquierda.clave = tabla_derecha.clave;
+	\end{lstlisting}
+	
+	\begin{ejemplo}
+		Listar clientes que han realizado pedidos:
+		
+		\begin{lstlisting}[style=sql, caption={INNER JOIN: clientes con pedidos}]
+			SELECT c.nombre,
+			p.pedido_id,
+			p.monto
+			FROM clientes AS c
+			INNER JOIN pedidos AS p
+			ON c.cliente_id = p.cliente_id;
+		\end{lstlisting}
+		
+		Solo aparecen clientes que han realizado al menos un pedido.
+	\end{ejemplo}
+	
+	\begin{nota}
+		La palabra clave \texttt{INNER} es opcional; \texttt{JOIN} a secas equivale a
+		\texttt{INNER JOIN} en todos los motores SQL principales.
+	\end{nota}
+	
+	\subsubsection{\texttt{LEFT JOIN}}
+	
+	\begin{definicion}{LEFT JOIN}
+		Devuelve \textbf{todas las filas de la tabla izquierda} más las coincidencias de la tabla
+		derecha. Cuando no existe par, las columnas de la tabla derecha se rellenan con
+		\texttt{NULL}.
+	\end{definicion}
+	
+	\begin{lstlisting}[style=sql, caption={Sintaxis de LEFT JOIN}]
+		SELECT columnas
+		FROM tabla_izquierda
+		LEFT JOIN tabla_derecha
+		ON tabla_izquierda.clave = tabla_derecha.clave;
+	\end{lstlisting}
+	
+	\begin{ejemplo}
+		Listar todos los clientes y, si tienen pedidos, mostrar su monto:
+		
+		\begin{lstlisting}[style=sql, caption={LEFT JOIN: todos los clientes con sus pedidos}]
+			SELECT c.nombre,
+			p.pedido_id,
+			p.monto
+			FROM clientes AS c
+			LEFT JOIN pedidos AS p
+			ON c.cliente_id = p.cliente_id;
+		\end{lstlisting}
+		
+		Los clientes sin pedidos aparecen con \texttt{NULL} en las columnas de \texttt{pedidos}.
+	\end{ejemplo}
+	
+	\textbf{Caso de uso habitual — detectar registros sin par:}
+	
+	\begin{lstlisting}[style=sql, caption={Clientes que nunca han realizado un pedido}]
+		SELECT c.nombre
+		FROM clientes AS c
+		LEFT JOIN pedidos AS p
+		ON c.cliente_id = p.cliente_id
+		WHERE p.pedido_id IS NULL;
+	\end{lstlisting}
+	
+	\subsubsection{\texttt{RIGHT JOIN}}
+	
+	\begin{definicion}{RIGHT JOIN}
+		Devuelve \textbf{todas las filas de la tabla derecha} más las coincidencias de la tabla
+		izquierda. Es el simétrico de \texttt{LEFT JOIN}.
+	\end{definicion}
+	
+	\begin{nota}
+		En la práctica, \texttt{RIGHT JOIN} se usa con menos frecuencia que \texttt{LEFT JOIN}.
+		Cualquier consulta con \texttt{RIGHT JOIN} puede reescribirse como un \texttt{LEFT JOIN}
+		intercambiando el orden de las tablas:
+		\begin{center}
+			\texttt{A RIGHT JOIN B} $\equiv$ \texttt{B LEFT JOIN A}
+		\end{center}
+	\end{nota}
+	
+	\subsubsection{\texttt{UNION}}
+	
+	\begin{definicion}{UNION}
+		Combina verticalmente los resultados de dos o más sentencias \texttt{SELECT}.
+		\texttt{UNION} elimina filas duplicadas; \texttt{UNION ALL} las conserva.
+	\end{definicion}
+	
+	\begin{lstlisting}[style=sql, caption={Sintaxis de UNION / UNION ALL}]
+		SELECT columna1, columna2, ...
+		FROM tabla_a
+		UNION [ALL]
+		SELECT columna1, columna2, ...
+		FROM tabla_b;
+	\end{lstlisting}
+	
+	\begin{ejemplo}
+		Obtener una lista unificada de correos de dos tablas distintas:
+		
+		\begin{lstlisting}[style=sql, caption={UNION de correos de clientes y proveedores}]
+			SELECT nombre, correo, 'cliente'   AS origen
+			FROM clientes
+			UNION
+			SELECT nombre, correo, 'proveedor' AS origen
+			FROM proveedores
+			ORDER BY nombre;
+		\end{lstlisting}
+	\end{ejemplo}
+	
+	%==============================================================
+	% PARTE IV: ESCRITURA Y MODIFICACIÓN DE DATOS
+	%==============================================================
+	
+	\newpage
+	\section{Escritura de Datos}
+	
+	Las sentencias de escritura forman parte del sublenguaje \textbf{DML}
+	(\textit{Data Manipulation Language}) de SQL. Permiten insertar, modificar y
+	eliminar filas en las tablas de una base de datos relacional.
+	
+	\begin{nota}
+		Toda operación DML es transaccional. En motores como MySQL/InnoDB o PostgreSQL,
+		los cambios pueden deshacerse con \texttt{ROLLBACK} mientras la transacción
+		no haya sido confirmada con \texttt{COMMIT}.
+	\end{nota}
+	
+	\subsection{\texttt{INSERT}}
+	
+	\begin{definicion}{INSERT}
+		Agrega \textbf{una o más filas} nuevas a una tabla. Los valores proporcionados
+		deben respetar los tipos de datos, restricciones \texttt{NOT NULL} y claves
+		foráneas definidas en el esquema.
+	\end{definicion}
+	
+	\textbf{Sintaxis — una sola fila:}
+	
+	\begin{lstlisting}[style=sql, caption={INSERT de una fila con columnas explícitas}]
+		INSERT INTO nombre_tabla (col1, col2, col3)
+		VALUES (val1, val2, val3);
+	\end{lstlisting}
+	
+	\textbf{Sintaxis — múltiples filas:}
+	
+	\begin{lstlisting}[style=sql, caption={INSERT de varias filas en una sola sentencia}]
+		INSERT INTO nombre_tabla (col1, col2, col3)
+		VALUES
+		(val1a, val2a, val3a),
+		(val1b, val2b, val3b),
+		(val1c, val2c, val3c);
+	\end{lstlisting}
+	
+	\begin{ejemplo}
+		Poblar la tabla \texttt{productos} con tres artículos:
+		
+		\begin{lstlisting}[style=sql, caption={Inserción múltiple en la tabla productos}]
+			INSERT INTO productos (nombre, precio, stock, categoria_id)
+			VALUES
+			('Teclado mecánico',  850.00, 40, 3),
+			('Monitor 24"',      3200.00, 15, 3),
+			('Silla ergonómica', 5400.00,  8, 5);
+		\end{lstlisting}
+	\end{ejemplo}
+	
+	\textbf{Inserción a partir de un \texttt{SELECT}:}
+	
+	\begin{lstlisting}[style=sql, caption={INSERT ... SELECT: copiar filas desde otra tabla}]
+		INSERT INTO productos_archivo (nombre, precio, categoria_id)
+		SELECT nombre, precio, categoria_id
+		FROM   productos
+		WHERE  stock = 0;
+	\end{lstlisting}
+	
+	\subsection{\texttt{UPDATE}}
+	
+	\begin{definicion}{UPDATE}
+		Modifica los valores de \textbf{una o más columnas} en las filas que satisfacen
+		la condición \texttt{WHERE}. Si se omite \texttt{WHERE}, la actualización afecta
+		a \textbf{todas} las filas de la tabla.
+	\end{definicion}
+	
+	\textbf{Sintaxis general:}
+	
+	\begin{lstlisting}[style=sql, caption={Sintaxis de UPDATE con WHERE}]
+		UPDATE nombre_tabla
+		SET    col1 = nuevo_val1,
+		col2 = nuevo_val2
+		WHERE  condicion;
+	\end{lstlisting}
+	
+	\begin{ejemplo}
+		Aplicar un incremento de 10\,\% al precio de todos los productos de la
+		categoría 3:
+		
+		\begin{lstlisting}[style=sql, caption={UPDATE con expresión aritmética}]
+			UPDATE productos
+			SET    precio = precio * 1.10
+			WHERE  categoria_id = 3;
+		\end{lstlisting}
+	\end{ejemplo}
+	
+	\begin{nota}
+		\textbf{Buenas prácticas antes de ejecutar un UPDATE:}
+		\begin{enumerate}
+			\item Verificar la condición con un \texttt{SELECT} previo usando el mismo
+			\texttt{WHERE}.
+			\item Ejecutar dentro de una transacción explícita para poder hacer
+			\texttt{ROLLBACK} si el resultado no es el esperado.
+			\item En MySQL, activar \texttt{sql\_safe\_updates = 1} para bloquear
+			\texttt{UPDATE} sin \texttt{WHERE}.
+		\end{enumerate}
+	\end{nota}
+	
+	\subsection{\texttt{DELETE}}
+	
+	\begin{definicion}{DELETE}
+		Elimina las filas que cumplen la condición \texttt{WHERE}. Al igual que
+		\texttt{UPDATE}, si se omite \texttt{WHERE} se eliminan \textbf{todas} las
+		filas de la tabla.
+	\end{definicion}
+	
+	\textbf{Sintaxis general:}
+	
+	\begin{lstlisting}[style=sql, caption={Sintaxis de DELETE con WHERE}]
+		DELETE FROM nombre_tabla
+		WHERE condicion;
+	\end{lstlisting}
+	
+	\begin{ejemplo}
+		Eliminar los productos sin stock de la categoría 5:
+		
+		\begin{lstlisting}[style=sql, caption={DELETE con condición compuesta}]
+			DELETE FROM productos
+			WHERE stock = 0
+			AND categoria_id = 5;
+		\end{lstlisting}
+	\end{ejemplo}
+	
+	\subsubsection{Diferencias entre \texttt{DELETE} y \texttt{TRUNCATE}}
+	
+	\begin{table}[H]
+		\centering
+		\caption{Comparación entre \texttt{DELETE} y \texttt{TRUNCATE}}
+		\renewcommand{\arraystretch}{1.3}
+		\rowcolors{2}{gray!10}{white}
+		\begin{tabularx}{\textwidth}{>{\bfseries}l X X}
+			\toprule
+			\textbf{Característica}     & \textbf{\texttt{DELETE}}                        & \textbf{\texttt{TRUNCATE}}                   \\
+			\midrule
+			Sublenguaje SQL             & DML                                             & DDL                                          \\
+			Cláusula \texttt{WHERE}     & Sí — elimina filas selectivamente               & No — elimina todas las filas                 \\
+			Transaccional               & Sí — admite \texttt{ROLLBACK}                   & Depende del motor; en MySQL no               \\
+			Velocidad                   & Más lenta (registro fila a fila)                & Más rápida (libera páginas de datos)         \\
+			Reinicio de \texttt{AUTO\_INCREMENT} & No — el contador no se reinicia       & Sí — el contador vuelve a 1                  \\
+			\bottomrule
+		\end{tabularx}
+	\end{table}
+	
+	\begin{nota}
+		Ante la duda entre \texttt{DELETE} y \texttt{TRUNCATE}, preferir
+		\texttt{DELETE} dentro de una transacción explícita: ofrece mayor control y
+		trazabilidad.
+	\end{nota}
+	
+	%==============================================================
+	\newpage
+	\section{Almacenamiento de Datos Relacionados}
+	
+	Cuando una base de datos posee \textbf{integridad referencial} activa, el orden
+	y la forma en que se insertan los registros importan tanto como el contenido
+	mismo. Violar el orden de inserción provoca errores de clave foránea que el
+	motor rechaza antes de escribir cualquier dato.
+	
+	\begin{nota}
+		Regla general: insertar siempre primero la tabla \textbf{padre} (la que
+		contiene la clave primaria referenciada) y después la tabla \textbf{hijo}
+		(la que contiene la clave foránea). Para eliminar, el orden es el inverso.
+	\end{nota}
+	
+	\subsection{Inserción en Tablas con Relación 1:1}
+	
+	\begin{definicion}{Relación 1:1}
+		Una fila de la tabla \textbf{A} se corresponde con \textbf{exactamente una}
+		fila de la tabla \textbf{B}, y viceversa. Se implementa colocando la clave
+		foránea en la tabla secundaria con restricción \texttt{UNIQUE}.
+	\end{definicion}
+	
+	\textbf{Esquema de ejemplo:}
+	
+	\begin{lstlisting}[style=sql, caption={Tablas con relación 1:1 — empleado y expediente}]
+		CREATE TABLE empleados (
+		empleado_id   INT          UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+		nombre        VARCHAR(100) NOT NULL,
+		departamento  VARCHAR(60)  NOT NULL
+		);
+		
+		CREATE TABLE expedientes (
+		expediente_id INT          UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+		empleado_id   INT          UNSIGNED NOT NULL UNIQUE,   -- UNIQUE fuerza 1:1
+		nss           CHAR(11)     NOT NULL,
+		fecha_alta    DATE         NOT NULL,
+		FOREIGN KEY (empleado_id) REFERENCES empleados(empleado_id)
+		ON DELETE CASCADE
+		ON UPDATE CASCADE
+		);
+	\end{lstlisting}
+	
+	\begin{lstlisting}[style=sql, caption={Inserción respetando integridad referencial 1:1}]
+		-- Paso 1: insertar en la tabla PADRE
+		INSERT INTO empleados (nombre, departamento)
+		VALUES ('Laura Mendoza', 'Ingeniería'),
+		('Roberto Solis', 'Finanzas');
+		
+		-- Paso 2: insertar en la tabla HIJO referenciando los IDs existentes
+		INSERT INTO expedientes (empleado_id, nss, fecha_alta)
+		VALUES (LAST_INSERT_ID(), '578-12-3456', '2021-03-15');
+	\end{lstlisting}
+	
+	\subsection{Inserción en Tablas con Relación 1:N}
+	
+	\begin{definicion}{Relación 1:N}
+		Una fila de la tabla \textbf{padre} puede asociarse con \textbf{múltiples}
+		filas de la tabla \textbf{hijo}, pero cada fila hijo pertenece a un único
+		padre. Es la cardinalidad más frecuente en bases de datos relacionales.
+	\end{definicion}
+	
+	\begin{lstlisting}[style=sql, caption={Inserción 1:N — un cliente con varios pedidos}]
+		-- Paso 1: insertar el cliente (tabla padre)
+		INSERT INTO clientes (nombre, correo)
+		VALUES ('Ana Torres', 'ana.torres@correo.com');
+		
+		-- Paso 2: insertar sus pedidos (tabla hijo)
+		INSERT INTO pedidos (cliente_id, fecha, total)
+		VALUES
+		(LAST_INSERT_ID(), '2024-01-15', 1250.00),
+		(LAST_INSERT_ID(), '2024-03-02',  340.50),
+		(LAST_INSERT_ID(), '2024-06-18', 2890.75);
+	\end{lstlisting}
+	
+	\subsection{Inserción en Tablas con Relación N:M}
+	
+	\begin{definicion}{Relación N:M}
+		Múltiples filas de la tabla \textbf{A} pueden relacionarse con múltiples
+		filas de la tabla \textbf{B}. Se implementa mediante una
+		\textbf{tabla intermedia} (también llamada tabla de unión o pivote).
+	\end{definicion}
+	
+	\begin{lstlisting}[style=sql, caption={Paso 1 — poblar ambas tablas padre}]
+		-- Tabla padre A
+		INSERT INTO estudiantes (nombre)
+		VALUES ('Miguel Ríos'),
+		('Sofía Castillo'),
+		('Héctor Núñez');
+		
+		-- Tabla padre B
+		INSERT INTO cursos (titulo, creditos)
+		VALUES ('Bases de Datos',    6),
+		('Álgebra Lineal',    4),
+		('Redes de Cómputo',  5);
+	\end{lstlisting}
+	
+	\begin{lstlisting}[style=sql, caption={Paso 2 — insertar en la tabla intermedia}]
+		INSERT INTO inscripciones (estudiante_id, curso_id, fecha_alta)
+		VALUES
+		(1, 1, '2024-08-20'),   -- Miguel -> Bases de Datos
+		(1, 3, '2024-08-20'),   -- Miguel -> Redes de Cómputo
+		(2, 1, '2024-08-21'),   -- Sofía -> Bases de Datos
+		(2, 2, '2024-08-21'),   -- Sofía -> Álgebra Lineal
+		(3, 1, '2024-08-22'),   -- Héctor -> Bases de Datos
+		(3, 2, '2024-08-22'),   -- Héctor -> Álgebra Lineal
+		(3, 3, '2024-08-22');   -- Héctor -> Redes de Cómputo
+	\end{lstlisting}
+	
+	%==============================================================
+	% RESUMEN Y CONCLUSIONES
+	%==============================================================
+	
+	\newpage
+	\section*{Resumen General}
+	
+	Este material ha cubierto los aspectos fundamentales del lenguaje SQL,
+	organizados en torno a tres ejes principales:
+	
+	\begin{enumerate}
+		\item \textbf{Fundamentos teóricos} (secciones 1–4): Historia del problema
+		de los datos, el modelo relacional de Codd, el nacimiento de SQL y
+		la definición conceptual de una base de datos relacional.
+		
+		\item \textbf{Administración de esquemas} (secciones 5–6): Creación y
+		gestión de bases de datos y tablas mediante DDL, incluyendo tipos
+		de datos, restricciones y modificación de estructuras.
+		
+		\item \textbf{Operaciones sobre datos} (secciones 7–9): Consulta (SELECT),
+		escritura (INSERT, UPDATE, DELETE) y manejo de relaciones entre
+		tablas (JOIN, integridad referencial).
+		
+	\end{enumerate}
+	
+	El dominio de estos conceptos proporciona la base necesaria para:
+	diseñar esquemas normalizados, escribir consultas eficientes, mantener
+	la integridad de los datos y administrar bases de datos relacionales
+	de forma profesional.
+	
+	\newpage
+	\printbibliography
+	
+\end{document}

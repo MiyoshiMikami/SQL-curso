@@ -1,0 +1,8 @@
+\babel@toc {spanish}{}\relax 
+\beamer@sectionintoc {1}{Historia e Introducción}{3}{0}{1}
+\beamer@sectionintoc {2}{Fundamentos de Bases de Datos}{9}{0}{2}
+\beamer@sectionintoc {3}{Consulta de Datos: SELECT}{15}{0}{3}
+\beamer@sectionintoc {4}{Modificadores: Parte 1}{20}{0}{4}
+\beamer@sectionintoc {5}{Modificadores: Parte 2}{23}{0}{5}
+\beamer@sectionintoc {6}{Consulta de Datos Relacionados}{27}{0}{6}
+\beamer@sectionintoc {7}{Escritura de Datos}{30}{0}{7}

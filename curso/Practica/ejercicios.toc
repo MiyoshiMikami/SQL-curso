@@ -1,0 +1,23 @@
+\babel@toc {spanish}{}\relax 
+\contentsline {section}{\numberline {1}Base de datos: Tienda de Informática}{2}{section.1}%
+\contentsline {subsection}{\numberline {1.1}Consultas sobre una tabla — Opción múltiple}{2}{subsection.1.1}%
+\contentsline {subsection}{\numberline {1.2}Consultas sobre una tabla — Completar código}{4}{subsection.1.2}%
+\contentsline {subsection}{\numberline {1.3}Consultas multitabla — Opción múltiple}{5}{subsection.1.3}%
+\contentsline {subsection}{\numberline {1.4}Consultas multitabla — Completar código}{6}{subsection.1.4}%
+\contentsline {subsection}{\numberline {1.5}Consultas resumen — Opción múltiple}{7}{subsection.1.5}%
+\contentsline {subsection}{\numberline {1.6}Subconsultas — Completar código}{8}{subsection.1.6}%
+\contentsline {section}{\numberline {2}Base de datos: Gestión de Empleados}{9}{section.2}%
+\contentsline {subsection}{\numberline {2.1}Consultas sobre una tabla — Opción múltiple}{9}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}Consultas sobre una tabla — Completar código}{10}{subsection.2.2}%
+\contentsline {subsection}{\numberline {2.3}Consultas multitabla — Opción múltiple}{11}{subsection.2.3}%
+\contentsline {subsection}{\numberline {2.4}Consultas resumen — Completar código}{12}{subsection.2.4}%
+\contentsline {subsection}{\numberline {2.5}Subconsultas — Opción múltiple}{12}{subsection.2.5}%
+\contentsline {section}{\numberline {3}Base de datos: Gestión de Ventas}{13}{section.3}%
+\contentsline {subsection}{\numberline {3.1}Consultas sobre una tabla — Opción múltiple}{13}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}Consultas sobre una tabla — Completar código}{14}{subsection.3.2}%
+\contentsline {subsection}{\numberline {3.3}Consultas multitabla — Completar código}{14}{subsection.3.3}%
+\contentsline {subsection}{\numberline {3.4}Consultas resumen — Opción múltiple}{15}{subsection.3.4}%
+\contentsline {subsection}{\numberline {3.5}Ejercicio integrador de código completo}{16}{subsection.3.5}%
+\contentsline {section}{\numberline {4}Preguntas de Relacionar Columnas}{16}{section.4}%
+\contentsline {section}{\numberline {5}Verdadero / Falso}{18}{section.5}%
+\contentsline {section}{Soluciones}{19}{section*.2}%

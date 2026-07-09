@@ -1,0 +1,58 @@
+\babel@toc {spanish}{}\relax 
+\contentsline {section}{\numberline {1}El Problema de los Datos: Una Perspectiva Histórica}{3}{section.1}%
+\contentsline {subsection}{\numberline {1.1}Era pre-relacional (1950–1970)}{3}{subsection.1.1}%
+\contentsline {section}{\numberline {2}Edgar F.\ Codd y el Modelo Relacional}{4}{section.2}%
+\contentsline {subsection}{\numberline {2.1}Las 12 reglas de Codd}{4}{subsection.2.1}%
+\contentsline {section}{\numberline {3}Nacimiento de SQL: De SEQUEL a SQL}{5}{section.3}%
+\contentsline {subsection}{\numberline {3.1}El primer sistema comercial: Oracle}{5}{subsection.3.1}%
+\contentsline {section}{\numberline {4}¿Qué es una Base de Datos?}{6}{section.4}%
+\contentsline {subsection}{\numberline {4.1}Analogía con el mundo real}{6}{subsection.4.1}%
+\contentsline {section}{\numberline {5}Administración de la Base de Datos}{7}{section.5}%
+\contentsline {subsection}{\numberline {5.1}\texttt {CREATE DATABASE}}{7}{subsection.5.1}%
+\contentsline {subsection}{\numberline {5.2}\texttt {DROP DATABASE}}{8}{subsection.5.2}%
+\contentsline {section}{\numberline {6}Administración de Tablas}{9}{section.6}%
+\contentsline {subsection}{\numberline {6.1}\texttt {CREATE TABLE}}{9}{subsection.6.1}%
+\contentsline {subsection}{\numberline {6.2}Restricciones de Integridad}{11}{subsection.6.2}%
+\contentsline {subsubsection}{\numberline {6.2.1}\texttt {NOT NULL}}{11}{subsubsection.6.2.1}%
+\contentsline {subsubsection}{\numberline {6.2.2}\texttt {UNIQUE}}{11}{subsubsection.6.2.2}%
+\contentsline {subsubsection}{\numberline {6.2.3}\texttt {PRIMARY KEY}}{12}{subsubsection.6.2.3}%
+\contentsline {subsubsection}{\numberline {6.2.4}\texttt {CHECK}}{13}{subsubsection.6.2.4}%
+\contentsline {subsubsection}{\numberline {6.2.5}\texttt {FOREIGN KEY}}{13}{subsubsection.6.2.5}%
+\contentsline {subsubsection}{\numberline {6.2.6}\texttt {DEFAULT}}{14}{subsubsection.6.2.6}%
+\contentsline {subsubsection}{\numberline {6.2.7}\texttt {AUTO\_INCREMENT}}{14}{subsubsection.6.2.7}%
+\contentsline {subsection}{\numberline {6.3}\texttt {DROP TABLE}}{15}{subsection.6.3}%
+\contentsline {subsection}{\numberline {6.4}\texttt {ALTER TABLE}}{15}{subsection.6.4}%
+\contentsline {subsubsection}{\numberline {6.4.1}\texttt {ADD}}{16}{subsubsection.6.4.1}%
+\contentsline {subsubsection}{\numberline {6.4.2}\texttt {RENAME COLUMN}}{16}{subsubsection.6.4.2}%
+\contentsline {subsubsection}{\numberline {6.4.3}\texttt {MODIFY COLUMN}}{17}{subsubsection.6.4.3}%
+\contentsline {subsubsection}{\numberline {6.4.4}\texttt {DROP COLUMN}}{17}{subsubsection.6.4.4}%
+\contentsline {section}{\numberline {7}Consulta de Datos: \texttt {SELECT}}{19}{section.7}%
+\contentsline {subsection}{\numberline {7.1}Sintaxis completa y cláusulas}{19}{subsection.7.1}%
+\contentsline {subsection}{\numberline {7.2}Tabla de ejemplo}{20}{subsection.7.2}%
+\contentsline {subsection}{\numberline {7.3}Proyección de columnas: \texttt {SELECT *} y columnas específicas}{20}{subsection.7.3}%
+\contentsline {subsection}{\numberline {7.4}Operadores aritméticos}{21}{subsection.7.4}%
+\contentsline {subsection}{\numberline {7.5}Operadores de comparación}{22}{subsection.7.5}%
+\contentsline {section}{\numberline {8}Modificadores: Filtrado, Ordenamiento y Agrupación}{23}{section.8}%
+\contentsline {subsection}{\numberline {8.1}\texttt {DISTINCT}}{23}{subsection.8.1}%
+\contentsline {subsection}{\numberline {8.2}\texttt {WHERE}}{23}{subsection.8.2}%
+\contentsline {subsection}{\numberline {8.3}\texttt {ORDER BY}}{24}{subsection.8.3}%
+\contentsline {subsection}{\numberline {8.4}\texttt {LIKE}}{24}{subsection.8.4}%
+\contentsline {subsection}{\numberline {8.5}\texttt {AND}, \texttt {OR}, \texttt {NOT}}{25}{subsection.8.5}%
+\contentsline {subsection}{\numberline {8.6}\texttt {IN} y \texttt {BETWEEN}}{26}{subsection.8.6}%
+\contentsline {subsection}{\numberline {8.7}\texttt {GROUP BY} y \texttt {HAVING}}{26}{subsection.8.7}%
+\contentsline {subsection}{\numberline {8.8}\texttt {CASE}}{28}{subsection.8.8}%
+\contentsline {subsection}{\numberline {8.9}\texttt {COALESCE} e \texttt {IFNULL}}{28}{subsection.8.9}%
+\contentsline {subsection}{\numberline {8.10}Combinación de tablas: \texttt {JOIN}}{28}{subsection.8.10}%
+\contentsline {subsubsection}{\numberline {8.10.1}\texttt {INNER JOIN}}{29}{subsubsection.8.10.1}%
+\contentsline {subsubsection}{\numberline {8.10.2}\texttt {LEFT JOIN}}{29}{subsubsection.8.10.2}%
+\contentsline {subsubsection}{\numberline {8.10.3}\texttt {RIGHT JOIN}}{30}{subsubsection.8.10.3}%
+\contentsline {subsubsection}{\numberline {8.10.4}\texttt {UNION}}{30}{subsubsection.8.10.4}%
+\contentsline {section}{\numberline {9}Escritura de Datos}{32}{section.9}%
+\contentsline {subsection}{\numberline {9.1}\texttt {INSERT}}{32}{subsection.9.1}%
+\contentsline {subsection}{\numberline {9.2}\texttt {UPDATE}}{33}{subsection.9.2}%
+\contentsline {subsection}{\numberline {9.3}\texttt {DELETE}}{34}{subsection.9.3}%
+\contentsline {subsubsection}{\numberline {9.3.1}Diferencias entre \texttt {DELETE} y \texttt {TRUNCATE}}{34}{subsubsection.9.3.1}%
+\contentsline {section}{\numberline {10}Almacenamiento de Datos Relacionados}{35}{section.10}%
+\contentsline {subsection}{\numberline {10.1}Inserción en Tablas con Relación 1:1}{35}{subsection.10.1}%
+\contentsline {subsection}{\numberline {10.2}Inserción en Tablas con Relación 1:N}{36}{subsection.10.2}%
+\contentsline {subsection}{\numberline {10.3}Inserción en Tablas con Relación N:M}{36}{subsection.10.3}%

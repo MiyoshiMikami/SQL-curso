@@ -1,0 +1,16 @@
+\frametitle{Operaciones de Manipulación DML}
+\begin{sqlbox}{Escritura, Mutación y Eliminación Masiva}
+-- Inserción multi-registro atómica
+INSERT INTO productos (nombre, precio, stock) VALUES
+('Teclado Mecánico', 850.00, 40),
+('Monitor 24"', 3200.00, 15);
+
+-- Modificación con alcance delimitado
+UPDATE productos
+SET precio = precio * 1.10
+WHERE categoria_id = 3;
+
+-- Borrado físico selectivo
+DELETE FROM productos
+WHERE stock = 0 AND categoria_id = 5;
+  \end{sqlbox}

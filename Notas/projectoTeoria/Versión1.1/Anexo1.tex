@@ -1,0 +1,725 @@
+% ─── MÓDULO 7: Administración de la base de datos ────────
+\newpage
+\section{Administración de la Base de Datos}
+
+Las sentencias de administración de bases de datos pertenecen al sublenguaje
+\textbf{DDL}. Operan sobre el contenedor de más alto nivel en MySQL: la
+\textbf{base de datos} (también llamada \textit{schema}), que agrupa tablas,
+vistas, procedimientos y demás objetos.
+
+% ─────────────────────────────────────────────────────────
+\subsection{\texttt{CREATE DATABASE}}
+
+\begin{definicion}{CREATE DATABASE}
+  Crea una nueva base de datos vacía en el servidor. Permite especificar el
+  \textbf{juego de caracteres} (\textit{character set}) y la
+  \textbf{colación} (\textit{collation}) que determinarán cómo se almacenan
+  y comparan las cadenas de texto en todas sus tablas.
+\end{definicion}
+
+\begin{lstlisting}[style=sql, caption={Sintaxis de CREATE DATABASE}]
+CREATE DATABASE [IF NOT EXISTS] nombre_bd
+    [CHARACTER SET  charset_name]
+    [COLLATE        collation_name];
+\end{lstlisting}
+
+\begin{ejemplo}
+  Crear una base de datos para una aplicación en español con soporte
+  completo de Unicode:
+
+\begin{lstlisting}[style=sql, caption={Base de datos con utf8mb4 y collation en español}]
+CREATE DATABASE IF NOT EXISTS tienda_online
+    CHARACTER SET  utf8mb4
+    COLLATE        utf8mb4_unicode_ci;
+
+-- Seleccionar la base de datos activa
+USE tienda_online;
+\end{lstlisting}
+\end{ejemplo}
+
+\textbf{Juegos de caracteres y colaciones más comunes:}
+
+\begin{table}[H]
+  \centering
+  \caption{Character sets y collations habituales en MySQL}
+  \renewcommand{\arraystretch}{1.3}
+  \rowcolors{2}{gray!10}{white}
+  \begin{tabularx}{\textwidth}{>{\ttfamily}l >{\ttfamily}l X}
+    \toprule
+    \textbf{charset}  & \textbf{collation}          & \textbf{Uso recomendado}                        \\
+    \midrule
+    utf8mb4  & utf8mb4\_unicode\_ci  & Unicode completo; soporta emojis; recomendado   \\
+    utf8mb4  & utf8mb4\_0900\_ai\_ci & Unicode 9.0; sin acento/mayúsculas; MySQL 8.0+  \\
+    utf8mb4  & utf8mb4\_bin          & Comparación binaria; distingue mayúsculas       \\
+    latin1   & latin1\_swedish\_ci   & Legado; solo caracteres ISO-8859-1              \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\begin{nota}
+  Usar \texttt{utf8} (sin \texttt{mb4}) en MySQL es un error frecuente: ese
+  alias solo soporta hasta 3 bytes por carácter y excluye emojis y algunos
+  ideogramas CJK. La elección correcta para proyectos nuevos es siempre
+  \texttt{utf8mb4}.
+\end{nota}
+
+\begin{lstlisting}[style=sql, caption={Comandos de exploración de bases de datos}]
+SHOW DATABASES;                    -- listar todas las bases de datos
+SHOW CREATE DATABASE tienda_online; -- ver la definición completa
+SELECT DATABASE();                  -- ver la base de datos activa
+\end{lstlisting}
+
+% ─────────────────────────────────────────────────────────
+\subsection{\texttt{DROP DATABASE}}
+
+\begin{definicion}{DROP DATABASE}
+  Elimina la base de datos y \textbf{todos los objetos que contiene}
+  (tablas, vistas, procedimientos, datos) de forma permanente e
+  irreversible. No existe confirmación ni papelera de reciclaje.
+\end{definicion}
+
+\begin{lstlisting}[style=sql, caption={Sintaxis de DROP DATABASE}]
+DROP DATABASE [IF EXISTS] nombre_bd;
+\end{lstlisting}
+
+\begin{ejemplo}
+\begin{lstlisting}[style=sql, caption={DROP DATABASE con y sin guarda}]
+-- Genera error si la base de datos no existe
+DROP DATABASE tienda_online;
+
+-- No genera error si no existe (útil en scripts de despliegue)
+DROP DATABASE IF EXISTS tienda_online;
+\end{lstlisting}
+\end{ejemplo}
+
+\begin{nota}
+  \textbf{Precauciones antes de ejecutar DROP DATABASE:}
+  \begin{enumerate}
+    \item Verificar que se tiene un respaldo (\textit{backup}) actualizado.
+    \item Confirmar que ninguna aplicación activa tiene conexiones abiertas
+          a esa base de datos.
+    \item Comprobar el nombre con \texttt{SHOW DATABASES} antes de ejecutar.
+    \item En producción, revocar el privilegio \texttt{DROP} a usuarios de
+          aplicación para evitar ejecuciones accidentales.
+  \end{enumerate}
+\end{nota}
+
+% ─── MÓDULO 13: Conceptos avanzados ──────────────────────
+\newpage
+\section{Conceptos Avanzados}
+
+Los objetos descritos en este módulo permiten construir bases de datos más
+eficientes, seguras y mantenibles. Aunque no son imprescindibles para
+consultas básicas, son herramientas fundamentales en entornos de producción.
+
+% ─────────────────────────────────────────────────────────
+\subsection{\texttt{INDEX}}
+
+\begin{definicion}{Índice}
+  Estructura de datos auxiliar que el motor mantiene sincronizada con la
+  tabla para acelerar las operaciones de búsqueda, ordenamiento y unión.
+  Mejora el rendimiento de \texttt{SELECT} a cambio de un coste adicional
+  en \texttt{INSERT}, \texttt{UPDATE} y \texttt{DELETE}, y de espacio en
+  disco.
+\end{definicion}
+
+\textbf{Tipos de índice en MySQL:}
+
+\begin{table}[H]
+  \centering
+  \caption{Tipos de índice disponibles en MySQL/InnoDB}
+  \renewcommand{\arraystretch}{1.3}
+  \rowcolors{2}{gray!10}{white}
+  \begin{tabularx}{\textwidth}{>{\ttfamily}l l X}
+    \toprule
+    \textbf{Tipo}   & \textbf{Motor}       & \textbf{Uso recomendado}                              \\
+    \midrule
+    B-TREE          & InnoDB, MyISAM       & Búsquedas exactas, rangos, \texttt{ORDER BY}          \\
+    HASH            & Memory               & Solo igualdad exacta; no soporta rangos               \\
+    FULLTEXT        & InnoDB (5.6+)        & Búsqueda de texto libre en columnas \texttt{TEXT}     \\
+    SPATIAL         & InnoDB, MyISAM       & Datos geoespaciales (\texttt{GEOMETRY})               \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\begin{lstlisting}[style=sql, caption={Creación y eliminación de índices}]
+-- Índice simple en una columna
+CREATE INDEX idx_apellido ON clientes(apellido);
+
+-- Índice compuesto (el orden de columnas importa)
+CREATE INDEX idx_cat_precio ON productos(categoria_id, precio);
+
+-- Índice UNIQUE (equivale a restricción UNIQUE)
+CREATE UNIQUE INDEX uq_correo ON usuarios(correo);
+
+-- Índice FULLTEXT para búsqueda de texto
+CREATE FULLTEXT INDEX ft_descripcion ON productos(descripcion);
+
+-- Eliminar un índice
+DROP INDEX idx_apellido ON clientes;
+\end{lstlisting}
+
+\begin{lstlisting}[style=sql, caption={Uso del índice FULLTEXT con MATCH ... AGAINST}]
+SELECT nombre, descripcion
+FROM   productos
+WHERE  MATCH(descripcion) AGAINST('teclado mecánico' IN BOOLEAN MODE);
+\end{lstlisting}
+
+\begin{nota}
+  \textbf{Cuándo crear un índice:}
+  \begin{itemize}
+    \item Columnas que aparecen frecuentemente en \texttt{WHERE}, \texttt{JOIN ON},
+          \texttt{ORDER BY} o \texttt{GROUP BY}.
+    \item Columnas con alta cardinalidad (muchos valores distintos).
+  \end{itemize}
+  \textbf{Cuándo evitarlo:}
+  \begin{itemize}
+    \item Tablas pequeñas (el escaneo completo es más rápido).
+    \item Columnas con muy baja cardinalidad (\texttt{activo}, \texttt{genero}).
+    \item Tablas con escrituras masivas y pocas lecturas.
+  \end{itemize}
+\end{nota}
+
+% ─────────────────────────────────────────────────────────
+\subsection{\texttt{TRIGGER}}
+
+\begin{definicion}{TRIGGER}
+  Bloque de código SQL que se ejecuta \textbf{automáticamente} en respuesta
+  a un evento DML (\texttt{INSERT}, \texttt{UPDATE} o \texttt{DELETE}) sobre
+  una tabla, antes (\texttt{BEFORE}) o después (\texttt{AFTER}) de que el
+  cambio se aplique.
+\end{definicion}
+
+\begin{lstlisting}[style=sql, caption={Sintaxis general de un TRIGGER}]
+CREATE TRIGGER nombre_trigger
+    { BEFORE | AFTER } { INSERT | UPDATE | DELETE }
+    ON nombre_tabla
+    FOR EACH ROW
+BEGIN
+    -- cuerpo del trigger
+    -- NEW.columna  -> valor nuevo (INSERT / UPDATE)
+    -- OLD.columna  -> valor anterior (UPDATE / DELETE)
+END;
+\end{lstlisting}
+
+\begin{ejemplo}
+  Registrar en una tabla de auditoría cada cambio de precio en
+  \texttt{productos}:
+
+\begin{lstlisting}[style=sql, caption={TRIGGER de auditoría de cambios de precio}]
+CREATE TABLE auditoria_precios (
+    id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    producto_id INT UNSIGNED NOT NULL,
+    precio_ant  DECIMAL(10,2),
+    precio_new  DECIMAL(10,2),
+    cambiado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+DELIMITER $$
+CREATE TRIGGER trg_auditoria_precio
+    AFTER UPDATE ON productos
+    FOR EACH ROW
+BEGIN
+    IF OLD.precio <> NEW.precio THEN
+        INSERT INTO auditoria_precios
+               (producto_id, precio_ant, precio_new)
+        VALUES (NEW.producto_id, OLD.precio, NEW.precio);
+    END IF;
+END$$
+DELIMITER ;
+\end{lstlisting}
+\end{ejemplo}
+
+\begin{nota}
+  Los triggers dificultan la depuración y pueden crear efectos secundarios
+  inesperados si no se documentan. Úsarlos con moderación; para lógica
+  compleja, preferir procedimientos almacenados invocados explícitamente.
+\end{nota}
+
+% ─────────────────────────────────────────────────────────
+\subsection{\texttt{VIEW}}
+
+\begin{definicion}{Vista (\textit{View})}
+  Consulta \texttt{SELECT} almacenada con nombre propio que puede usarse
+  como si fuera una tabla. No duplica datos: cada vez que se consulta, el
+  motor ejecuta la consulta subyacente. Simplifica consultas complejas,
+  encapsula lógica y puede restringir el acceso a columnas sensibles.
+\end{definicion}
+
+\begin{lstlisting}[style=sql, caption={Creación y consulta de una vista}]
+-- Crear la vista
+CREATE VIEW vista_pedidos_activos AS
+    SELECT p.pedido_id,
+           c.nombre          AS cliente,
+           p.total,
+           p.fecha
+    FROM   pedidos    AS p
+    INNER JOIN clientes AS c ON p.cliente_id = c.cliente_id
+    WHERE  p.estado = 'activo';
+
+-- Usar la vista exactamente como una tabla
+SELECT cliente, SUM(total) AS total_compras
+FROM   vista_pedidos_activos
+GROUP  BY cliente
+ORDER  BY total_compras DESC;
+
+-- Reemplazar o eliminar la vista
+CREATE OR REPLACE VIEW vista_pedidos_activos AS ...;
+DROP VIEW IF EXISTS vista_pedidos_activos;
+\end{lstlisting}
+
+\begin{nota}
+  Las vistas en MySQL no almacenan datos en caché por defecto. Para
+  escenarios de alto rendimiento con consultas agregadas costosas,
+  considerar \textbf{vistas materializadas} (disponibles en PostgreSQL) o
+  tablas de resumen actualizadas por eventos programados.
+\end{nota}
+
+% ─────────────────────────────────────────────────────────
+\subsection{\texttt{STORED PROCEDURE}}
+
+\begin{definicion}{Procedimiento almacenado}
+  Bloque de código SQL con nombre, almacenado en el servidor y ejecutable
+  mediante \texttt{CALL}. Acepta parámetros de entrada (\texttt{IN}),
+  salida (\texttt{OUT}) o ambos (\texttt{INOUT}), y permite estructuras de
+  control (\texttt{IF}, \texttt{WHILE}, \texttt{LOOP}, cursores).
+\end{definicion}
+
+\begin{lstlisting}[style=sql, caption={Procedimiento con parámetros IN y OUT}]
+DELIMITER $$
+CREATE PROCEDURE sp_resumen_cliente(
+    IN  p_cliente_id INT UNSIGNED,
+    OUT p_total_pedidos INT,
+    OUT p_monto_total   DECIMAL(12,2)
+)
+BEGIN
+    SELECT COUNT(*),
+           COALESCE(SUM(total), 0)
+    INTO   p_total_pedidos,
+           p_monto_total
+    FROM   pedidos
+    WHERE  cliente_id = p_cliente_id;
+END$$
+DELIMITER ;
+
+-- Invocar el procedimiento
+CALL sp_resumen_cliente(7, @num_pedidos, @monto);
+SELECT @num_pedidos AS pedidos, @monto AS monto_total;
+\end{lstlisting}
+
+\begin{ejemplo}
+  Procedimiento con flujo de control para aplicar descuentos escalonados:
+
+\begin{lstlisting}[style=sql, caption={Stored procedure con IF / ELSEIF}]
+DELIMITER $$
+CREATE PROCEDURE sp_aplicar_descuento(
+    IN p_producto_id INT UNSIGNED,
+    IN p_porcentaje  DECIMAL(5,2)
+)
+BEGIN
+    IF p_porcentaje <= 0 OR p_porcentaje > 80 THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Porcentaje fuera de rango permitido';
+    ELSEIF p_porcentaje <= 20 THEN
+        UPDATE productos
+        SET    precio = precio * (1 - p_porcentaje / 100)
+        WHERE  producto_id = p_producto_id;
+    ELSE
+        -- Descuento mayor requiere aprobación: solo registrar solicitud
+        INSERT INTO solicitudes_descuento(producto_id, porcentaje)
+        VALUES (p_producto_id, p_porcentaje);
+    END IF;
+END$$
+DELIMITER ;
+\end{lstlisting}
+\end{ejemplo}
+
+% ─────────────────────────────────────────────────────────
+\subsection{Transacciones}
+
+\begin{definicion}{Transacción}
+  Unidad lógica de trabajo que agrupa una o más operaciones DML. Garantiza
+  las propiedades \textbf{ACID}: Atomicidad, Consistencia, Aislamiento y
+  Durabilidad. Si alguna operación falla, todo el grupo puede deshacerse.
+\end{definicion}
+
+\begin{table}[H]
+  \centering
+  \caption{Comandos de control de transacciones}
+  \renewcommand{\arraystretch}{1.3}
+  \rowcolors{2}{gray!10}{white}
+  \begin{tabularx}{\textwidth}{>{\ttfamily}l X}
+    \toprule
+    \textbf{Comando}          & \textbf{Efecto}                                               \\
+    \midrule
+    START TRANSACTION / BEGIN & Inicia una transacción explícita                              \\
+    COMMIT                    & Confirma y persiste todos los cambios                         \\
+    ROLLBACK                  & Deshace todos los cambios desde el último COMMIT              \\
+    SAVEPOINT nombre          & Crea un punto de restauración parcial dentro de la transacción\\
+    ROLLBACK TO nombre        & Deshace hasta el savepoint indicado (sin terminar la transacción)\\
+    RELEASE SAVEPOINT nombre  & Elimina un savepoint sin hacer rollback                       \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\begin{lstlisting}[style=sql, caption={Transacción con SAVEPOINT y manejo de errores}]
+START TRANSACTION;
+
+    INSERT INTO pedidos (cliente_id, total, fecha)
+    VALUES (12, 1500.00, CURDATE());
+
+    SAVEPOINT sp_pedido_insertado;
+
+    INSERT INTO detalle_pedido (pedido_id, producto_id, cantidad)
+    VALUES (LAST_INSERT_ID(), 5, 3);
+
+    -- Si este UPDATE falla, se puede revertir solo el detalle
+    UPDATE productos SET stock = stock - 3 WHERE producto_id = 5;
+
+    -- Todo correcto: confirmar
+    COMMIT;
+
+-- En caso de error detectado en la aplicación:
+-- ROLLBACK TO sp_pedido_insertado;  -- deshace solo desde el savepoint
+-- ROLLBACK;                          -- deshace toda la transacción
+\end{lstlisting}
+
+\begin{nota}
+  MySQL opera en modo \texttt{AUTOCOMMIT = 1} por defecto: cada sentencia
+  DML es una transacción implícita que se confirma de inmediato.
+  \texttt{START TRANSACTION} suspende ese modo hasta que se ejecute
+  \texttt{COMMIT} o \texttt{ROLLBACK}.
+\end{nota}
+
+% ─────────────────────────────────────────────────────────
+\subsection{Concurrencia}
+
+\begin{definicion}{Concurrencia}
+  Capacidad del motor para atender \textbf{múltiples transacciones
+  simultáneas} sin que interfieran entre sí. Se gestiona mediante
+  \textbf{bloqueos} (\textit{locks}) y \textbf{niveles de aislamiento}
+  (\textit{isolation levels}).
+\end{definicion}
+
+\textbf{Niveles de aislamiento en SQL estándar:}
+
+\begin{table}[H]
+  \centering
+  \caption{Niveles de aislamiento y fenómenos que previenen}
+  \renewcommand{\arraystretch}{1.3}
+  \rowcolors{2}{gray!10}{white}
+  \begin{tabularx}{\textwidth}{l X c c c}
+    \toprule
+    \textbf{Nivel}      & \textbf{Descripción resumida}
+      & \textbf{\textit{Dirty read}}
+      & \textbf{\textit{Non-rep. read}}
+      & \textbf{\textit{Phantom}} \\
+    \midrule
+    READ UNCOMMITTED & Ve cambios no confirmados de otras transacciones   & Sí & Sí & Sí \\
+    READ COMMITTED   & Solo ve cambios ya confirmados                     & No & Sí & Sí \\
+    REPEATABLE READ  & Garantiza lecturas consistentes (defecto InnoDB)   & No & No & Sí \\
+    SERIALIZABLE     & Ejecución secuencial total; máximo aislamiento      & No & No & No \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\begin{lstlisting}[style=sql, caption={Configurar y consultar el nivel de aislamiento}]
+-- Ver el nivel actual
+SELECT @@transaction_isolation;
+
+-- Cambiar para la sesión actual
+SET SESSION TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+
+-- Cambiar globalmente (requiere privilegio SUPER)
+SET GLOBAL  TRANSACTION ISOLATION LEVEL READ COMMITTED;
+\end{lstlisting}
+
+\begin{nota}
+  \textbf{Deadlock:} dos transacciones se bloquean mutuamente esperando
+  recursos que la otra retiene. InnoDB detecta el ciclo automáticamente y
+  aborta la transacción de menor coste. La aplicación debe estar preparada
+  para reintentar la operación al recibir el error \texttt{ER\_LOCK\_DEADLOCK}
+  (\texttt{1213}). Para minimizarlos: acceder siempre a las tablas en el
+  mismo orden y mantener las transacciones lo más cortas posible.
+\end{nota}
+
+% ─── MÓDULO 14: Conexión desde código ────────────────────
+\newpage
+\section{Conexión desde Código}
+
+Integrar una base de datos en una aplicación requiere un \textbf{conector}
+o \textit{driver}: biblioteca que traduce las llamadas del lenguaje de
+programación al protocolo de red del motor SQL.
+
+% ─────────────────────────────────────────────────────────
+\subsection{Conectores y Drivers}
+
+\begin{table}[H]
+  \centering
+  \caption{Conectores oficiales y populares por lenguaje}
+  \renewcommand{\arraystretch}{1.3}
+  \rowcolors{2}{gray!10}{white}
+  \begin{tabularx}{\textwidth}{l >{\ttfamily}l X}
+    \toprule
+    \textbf{Lenguaje} & \textbf{Librería / Driver}  & \textbf{Instalación / Referencia}          \\
+    \midrule
+    Python   & mysql-connector-python & \texttt{pip install mysql-connector-python} \\
+    Python   & PyMySQL                & \texttt{pip install pymysql}                \\
+    Python   & SQLAlchemy (ORM)       & \texttt{pip install sqlalchemy}             \\
+    Node.js  & mysql2                 & \texttt{npm install mysql2}                 \\
+    Node.js  & Prisma (ORM)           & \texttt{npm install prisma}                 \\
+    Java     & MySQL Connector/J      & Dependencia Maven: \texttt{mysql:mysql-connector-java} \\
+    PHP      & PDO\_MySQL             & Incluido en PHP; activar extensión \texttt{pdo\_mysql} \\
+    Go       & go-sql-driver/mysql    & \texttt{go get github.com/go-sql-driver/mysql} \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\begin{ejemplo}
+  Conexión y consulta básica con Python (\texttt{mysql-connector-python}):
+
+\begin{lstlisting}[language=Python, basicstyle=\ttfamily\small,
+    keywordstyle=\bfseries\color{NavyBlue},
+    commentstyle=\itshape\color{Gray},
+    backgroundcolor=\color{gray!6}, frame=single,
+    caption={Conexión a MySQL desde Python}]
+import mysql.connector
+
+conn = mysql.connector.connect(
+    host     = "localhost",
+    user     = "app_user",
+    password = "s3cr3to",
+    database = "tienda_online"
+)
+
+cursor = conn.cursor(dictionary=True)
+cursor.execute("SELECT producto_id, nombre, precio FROM productos LIMIT 5")
+
+for fila in cursor.fetchall():
+    print(fila["nombre"], fila["precio"])
+
+cursor.close()
+conn.close()
+\end{lstlisting}
+\end{ejemplo}
+
+\begin{ejemplo}
+  Conexión con Node.js usando \texttt{mysql2} y \texttt{async/await}:
+
+\begin{lstlisting}[language=Java, basicstyle=\ttfamily\small,
+    keywordstyle=\bfseries\color{NavyBlue},
+    commentstyle=\itshape\color{Gray},
+    backgroundcolor=\color{gray!6}, frame=single,
+    caption={Conexión a MySQL desde Node.js}]
+const mysql = require('mysql2/promise');
+
+const conn = await mysql.createConnection({
+    host:     'localhost',
+    user:     'app_user',
+    password: 's3cr3to',
+    database: 'tienda_online'
+});
+
+const [rows] = await conn.execute(
+    'SELECT nombre, precio FROM productos WHERE categoria_id = ?',
+    [3]   // parámetro enlazado (previene SQL Injection)
+);
+
+console.table(rows);
+await conn.end();
+\end{lstlisting}
+\end{ejemplo}
+
+% ─────────────────────────────────────────────────────────
+\subsection{SQL Injection}
+
+\begin{definicion}{SQL Injection}
+  Vulnerabilidad que permite a un atacante \textbf{inyectar código SQL
+  arbitrario} en una consulta, manipulando su lógica para extraer,
+  modificar o destruir datos, o para eludir la autenticación.
+\end{definicion}
+
+\begin{ejemplo}
+  Código vulnerable: concatenación directa de entrada del usuario.
+
+\begin{lstlisting}[language=Python, basicstyle=\ttfamily\small,
+    keywordstyle=\bfseries\color{NavyBlue},
+    commentstyle=\itshape\color{Gray},
+    backgroundcolor=\color{gray!6}, frame=single,
+    caption={Código VULNERABLE a SQL Injection}]
+usuario = input("Usuario: ")   # atacante ingresa:  ' OR '1'='1
+query = "SELECT * FROM usuarios WHERE username = '" + usuario + "'"
+# Consulta resultante:
+# SELECT * FROM usuarios WHERE username = '' OR '1'='1'
+# -> devuelve TODOS los usuarios sin contraseña
+cursor.execute(query)
+\end{lstlisting}
+\end{ejemplo}
+
+\begin{ejemplo}
+  Código seguro: consultas parametrizadas (\textit{prepared statements}).
+
+\begin{lstlisting}[language=Python, basicstyle=\ttfamily\small,
+    keywordstyle=\bfseries\color{NavyBlue},
+    commentstyle=\itshape\color{Gray},
+    backgroundcolor=\color{gray!6}, frame=single,
+    caption={Prevención con consultas parametrizadas}]
+usuario = input("Usuario: ")
+# El driver escapa automáticamente el valor
+cursor.execute(
+    "SELECT * FROM usuarios WHERE username = %s",
+    (usuario,)   # parámetro enlazado, nunca concatenado
+)
+\end{lstlisting}
+\end{ejemplo}
+
+\textbf{Medidas de prevención complementarias:}
+
+\begin{itemize}
+  \item Usar \textbf{siempre} consultas parametrizadas o ORMs que las
+        generen internamente.
+  \item Aplicar el \textbf{principio de mínimo privilegio}: el usuario de
+        la aplicación solo debe tener los permisos estrictamente necesarios
+        (\texttt{SELECT}, \texttt{INSERT}, etc.), nunca \texttt{DROP} o
+        \texttt{GRANT}.
+  \item Validar y sanitizar la entrada en la capa de aplicación antes de
+        pasarla al driver.
+  \item Evitar exponer mensajes de error detallados del motor en respuestas
+        de la API.
+\end{itemize}
+
+% ─── MÓDULO 15: Otros clientes y sistemas ────────────────
+\newpage
+\section{Otros Clientes SQL}
+
+Existen múltiples herramientas gráficas y de línea de comandos para
+interactuar con bases de datos SQL sin necesidad de escribir directamente
+en la terminal.
+
+\begin{table}[H]
+  \centering
+  \caption{Clientes SQL populares}
+  \renewcommand{\arraystretch}{1.3}
+  \rowcolors{2}{gray!10}{white}
+  \begin{tabularx}{\textwidth}{l l X}
+    \toprule
+    \textbf{Cliente}  & \textbf{Plataforma}          & \textbf{Características destacadas}                  \\
+    \midrule
+    DBeaver           & Windows, macOS, Linux        & Gratuito y de código abierto; soporta más de 80 motores \\
+    TablePlus         & macOS, Windows, Linux, iOS   & Interfaz nativa moderna; licencia de pago con prueba gratuita \\
+    DataGrip          & Windows, macOS, Linux        & IDE de JetBrains; refactorización SQL, inspecciones inteligentes \\
+    pgAdmin           & Web / escritorio             & Cliente oficial de PostgreSQL; gestión completa del servidor \\
+    Adminer           & Web (un solo archivo PHP)    & Ligero, sin instalación; útil en servidores remotos  \\
+    MySQL Workbench   & Windows, macOS, Linux        & Cliente oficial de MySQL; diseño ER visual incluido   \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+% ─────────────────────────────────────────────────────────
+\section{PostgreSQL}
+
+PostgreSQL es un sistema de gestión de bases de datos relacionales
+\textbf{de código abierto}, con más de 35 años de desarrollo activo,
+reconocido por su robustez, extensibilidad y cumplimiento estricto del
+estándar SQL.
+
+\textbf{Diferencias clave con MySQL:}
+
+\begin{table}[H]
+  \centering
+  \caption{MySQL vs.\ PostgreSQL — diferencias principales}
+  \renewcommand{\arraystretch}{1.3}
+  \rowcolors{2}{gray!10}{white}
+  \begin{tabularx}{\textwidth}{l X X}
+    \toprule
+    \textbf{Aspecto}          & \textbf{MySQL}                          & \textbf{PostgreSQL}                        \\
+    \midrule
+    Licencia                  & GPL / comercial (Oracle)                & PostgreSQL License (MIT-like)              \\
+    Modelo MVCC               & Solo en InnoDB                          & Nativo en todo el motor                    \\
+    Tipos de datos avanzados  & Limitados                               & JSON/JSONB, Arrays, HSTORE, UUID nativo    \\
+    Vistas materializadas     & No nativo                               & Sí, con \texttt{REFRESH MATERIALIZED VIEW} \\
+    Full-text search          & Básico                                  & Avanzado; soporta diccionarios y ranking   \\
+    Extensiones               & Plugins limitados                       & PostGIS, pgcrypto, TimescaleDB, etc.       \\
+    Procedimientos almacenados& SQL / MySQL dialect                     & PL/pgSQL, PL/Python, PL/Perl, etc.        \\
+    Secuencias                & \texttt{AUTO\_INCREMENT}                & \texttt{SERIAL} / \texttt{GENERATED ALWAYS AS IDENTITY} \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\begin{nota}
+  PostgreSQL es generalmente preferido para aplicaciones que requieren
+  consultas complejas, integridad de datos estricta o tipos de datos
+  avanzados. MySQL sigue siendo muy popular en aplicaciones web de alto
+  tráfico gracias a su velocidad en lecturas simples y su amplio soporte
+  en servicios de alojamiento.
+\end{nota}
+
+% ─────────────────────────────────────────────────────────
+\section{Despliegue en la Nube}
+
+Los servicios gestionados (\textit{Database as a Service}, DBaaS) eliminan
+la carga operativa de instalar, parchear y respaldar el motor de base de
+datos.
+
+\begin{table}[H]
+  \centering
+  \caption{Servicios de base de datos en la nube}
+  \renewcommand{\arraystretch}{1.3}
+  \rowcolors{2}{gray!10}{white}
+  \begin{tabularx}{\textwidth}{l l X}
+    \toprule
+    \textbf{Servicio}     & \textbf{Motor(es)}           & \textbf{Características destacadas}                     \\
+    \midrule
+    AWS RDS               & MySQL, PostgreSQL, MariaDB, Oracle, SQL Server
+                                                          & Backups automáticos, Multi-AZ, réplicas de lectura      \\
+    AWS Aurora            & MySQL / PostgreSQL compatible& Rendimiento hasta 5$\times$ sobre RDS; serverless disponible \\
+    Google Cloud SQL      & MySQL, PostgreSQL, SQL Server& Integración con BigQuery y Vertex AI                    \\
+    Azure Database        & MySQL, PostgreSQL            & Alta disponibilidad con zona de disponibilidad flexible  \\
+    PlanetScale           & MySQL (Vitess)               & Branching de esquemas; escala horizontal automática      \\
+    Railway               & MySQL, PostgreSQL, MongoDB   & Despliegue en segundos; ideal para prototipos            \\
+    Supabase              & PostgreSQL                   & BaaS open-source; autenticación y API REST incluidos     \\
+    Neon                  & PostgreSQL                   & Serverless; branching por pull-request                   \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+% ─────────────────────────────────────────────────────────
+\section{Próximos Pasos}
+
+\subsection*{Caminos de especialización}
+
+\begin{itemize}
+  \item \textbf{DBA (\textit{Database Administrator}):} administración de
+        servidores, alta disponibilidad, replicación, \textit{tuning} de
+        rendimiento, backups y recuperación ante desastres.
+  \item \textbf{Data Engineer:} pipelines de datos (ETL/ELT), almacenes de
+        datos (\textit{data warehouses}), herramientas como dbt, Apache
+        Spark, Airflow y servicios como BigQuery o Redshift.
+  \item \textbf{Backend Developer:} integración de bases de datos en APIs
+        REST y GraphQL, ORM avanzados, patrones de diseño de esquemas,
+        caché con Redis.
+  \item \textbf{Data Analyst / BI:} consultas analíticas avanzadas,
+        funciones de ventana, herramientas de visualización (Metabase,
+        Tableau, Power BI).
+\end{itemize}
+
+\subsection*{Recursos recomendados}
+
+\begin{itemize}
+  \item \textbf{Documentación oficial:}
+        \href{https://dev.mysql.com/doc/}{dev.mysql.com/doc} y
+        \href{https://www.postgresql.org/docs/}{postgresql.org/docs}.
+  \item \textbf{Práctica interactiva:}
+        \href{https://sqlzoo.net}{SQLZoo},
+        \href{https://www.hackerrank.com/domains/sql}{HackerRank SQL} y
+        \href{https://leetcode.com/problemset/database/}{LeetCode Database}.
+  \item \textbf{Libros de referencia:}
+        \textit{Learning MySQL} (Seyed M.M. \& Jay Pipes),
+        \textit{PostgreSQL: Up and Running} (Regina O. Obe \& Leo S. Hsu),
+        \textit{Designing Data-Intensive Applications} (Martin Kleppmann).
+  \item \textbf{Modelado de datos:}
+        \href{https://dbdiagram.io}{dbdiagram.io} para diseño visual de
+        esquemas con notación DBML.
+\end{itemize}
+
+\printbibliography[heading=bibintoc, title={Referencias}]

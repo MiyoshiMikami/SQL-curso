@@ -1,0 +1,266 @@
+% ─── MÓDULO 11: Almacenamiento de datos relacionados ─────
+\newpage
+\section{Almacenamiento de Datos Relacionados}
+
+Cuando una base de datos posee \textbf{integridad referencial} activa, el orden
+y la forma en que se insertan los registros importan tanto como el contenido
+mismo. Violar el orden de inserción provoca errores de clave foránea que el
+motor rechaza antes de escribir cualquier dato.
+
+\begin{nota}
+  Regla general: insertar siempre primero la tabla \textbf{padre} (la que
+  contiene la clave primaria referenciada) y después la tabla \textbf{hijo}
+  (la que contiene la clave foránea). Para eliminar, el orden es el inverso.
+\end{nota}
+
+% ─────────────────────────────────────────────────────────
+\subsection{Inserción en Tablas con Relación 1:1}
+
+\begin{definicion}{Relación 1:1}
+  Una fila de la tabla \textbf{A} se corresponde con \textbf{exactamente una}
+  fila de la tabla \textbf{B}, y viceversa. Se implementa colocando la clave
+  foránea en la tabla secundaria con restricción \texttt{UNIQUE}.
+\end{definicion}
+
+\textbf{Esquema de ejemplo:}
+
+\begin{lstlisting}[style=sql, caption={Tablas con relación 1:1 — empleado y expediente}]
+CREATE TABLE empleados (
+    empleado_id   INT          UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    nombre        VARCHAR(100) NOT NULL,
+    departamento  VARCHAR(60)  NOT NULL
+);
+
+CREATE TABLE expedientes (
+    expediente_id INT          UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    empleado_id   INT          UNSIGNED NOT NULL UNIQUE,   -- UNIQUE fuerza 1:1
+    nss           CHAR(11)     NOT NULL,
+    fecha_alta    DATE         NOT NULL,
+    FOREIGN KEY (empleado_id) REFERENCES empleados(empleado_id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+);
+\end{lstlisting}
+
+\textbf{Orden correcto de inserción:}
+
+\begin{lstlisting}[style=sql, caption={Inserción respetando integridad referencial 1:1}]
+-- Paso 1: insertar en la tabla PADRE
+INSERT INTO empleados (nombre, departamento)
+VALUES ('Laura Mendoza', 'Ingeniería'),
+       ('Roberto Solis', 'Finanzas');
+
+-- Paso 2: recuperar los IDs generados (o usar LAST_INSERT_ID() para uno solo)
+-- empleado_id = 1 -> Laura Mendoza
+-- empleado_id = 2 -> Roberto Solis
+
+-- Paso 3: insertar en la tabla HIJO referenciando los IDs existentes
+INSERT INTO expedientes (empleado_id, nss, fecha_alta)
+VALUES (1, '578-12-3456', '2021-03-15'),
+       (2, '412-87-9900', '2019-07-01');
+\end{lstlisting}
+
+\begin{ejemplo}
+  Uso de \texttt{LAST\_INSERT\_ID()} para encadenar inserciones individuales
+  de forma segura:
+
+\begin{lstlisting}[style=sql, caption={Encadenamiento con LAST\_INSERT\_ID()}]
+INSERT INTO empleados (nombre, departamento)
+VALUES ('Carmen Vidal', 'Diseño');
+
+-- LAST_INSERT_ID() devuelve el AUTO_INCREMENT de la última inserción
+INSERT INTO expedientes (empleado_id, nss, fecha_alta)
+VALUES (LAST_INSERT_ID(), '301-55-7812', '2023-01-10');
+\end{lstlisting}
+\end{ejemplo}
+
+\begin{nota}
+  \texttt{LAST\_INSERT\_ID()} es \textbf{seguro en entornos concurrentes}: cada
+  conexión al servidor mantiene su propio contador, por lo que dos sesiones
+  simultáneas no interfieren entre sí.
+\end{nota}
+
+% ─────────────────────────────────────────────────────────
+\subsection{Inserción en Tablas con Relación 1:N}
+
+\begin{definicion}{Relación 1:N}
+  Una fila de la tabla \textbf{padre} puede asociarse con \textbf{múltiples}
+  filas de la tabla \textbf{hijo}, pero cada fila hijo pertenece a un único
+  padre. Es la cardinalidad más frecuente en bases de datos relacionales.
+\end{definicion}
+
+\textbf{Esquema de ejemplo:}
+
+\begin{lstlisting}[style=sql, caption={Tablas con relación 1:N — cliente y pedidos}]
+CREATE TABLE clientes (
+    cliente_id  INT          UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    nombre      VARCHAR(100) NOT NULL,
+    correo      VARCHAR(120) NOT NULL UNIQUE
+);
+
+CREATE TABLE pedidos (
+    pedido_id   INT          UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    cliente_id  INT          UNSIGNED NOT NULL,
+    fecha       DATE         NOT NULL,
+    total       DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    FOREIGN KEY (cliente_id) REFERENCES clientes(cliente_id)
+        ON DELETE RESTRICT
+        ON UPDATE CASCADE
+);
+\end{lstlisting}
+
+\textbf{Inserción de registros dependientes:}
+
+\begin{lstlisting}[style=sql, caption={Inserción 1:N — un cliente con varios pedidos}]
+-- Paso 1: insertar el cliente (tabla padre)
+INSERT INTO clientes (nombre, correo)
+VALUES ('Ana Torres', 'ana.torres@correo.com');
+
+-- Paso 2: insertar sus pedidos (tabla hijo)
+--         Todos referencian el mismo cliente_id
+INSERT INTO pedidos (cliente_id, fecha, total)
+VALUES
+    (LAST_INSERT_ID(), '2024-01-15', 1250.00),
+    (LAST_INSERT_ID(), '2024-03-02',  340.50),
+    (LAST_INSERT_ID(), '2024-06-18', 2890.75);
+\end{lstlisting}
+
+\begin{ejemplo}
+  Inserción de pedidos para un cliente ya existente, identificado por correo:
+
+\begin{lstlisting}[style=sql, caption={INSERT ... SELECT para referenciar por atributo}]
+INSERT INTO pedidos (cliente_id, fecha, total)
+SELECT cliente_id, '2024-09-10', 780.00
+FROM   clientes
+WHERE  correo = 'ana.torres@correo.com';
+\end{lstlisting}
+
+  Este patrón evita tener que conocer el \texttt{cliente\_id} numérico de
+  antemano y es útil en scripts de carga masiva.
+\end{ejemplo}
+
+\begin{nota}
+  La política \texttt{ON DELETE RESTRICT} impide eliminar un cliente mientras
+  tenga pedidos asociados. Para poder borrarlo habría que eliminar primero sus
+  pedidos, o bien cambiar la política a \texttt{ON DELETE CASCADE}.
+\end{nota}
+
+% ─────────────────────────────────────────────────────────
+\subsection{Inserción en Tablas con Relación N:M}
+
+\begin{definicion}{Relación N:M}
+  Múltiples filas de la tabla \textbf{A} pueden relacionarse con múltiples
+  filas de la tabla \textbf{B}. Se implementa mediante una
+  \textbf{tabla intermedia} (también llamada tabla de unión o pivote) que
+  contiene, al menos, las claves foráneas de ambas entidades.
+\end{definicion}
+
+\textbf{Esquema de ejemplo:}
+
+\begin{lstlisting}[style=sql, caption={Tablas con relación N:M — estudiantes y cursos}]
+CREATE TABLE estudiantes (
+    estudiante_id INT          UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    nombre        VARCHAR(100) NOT NULL
+);
+
+CREATE TABLE cursos (
+    curso_id      INT          UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    titulo        VARCHAR(120) NOT NULL,
+    creditos      TINYINT      UNSIGNED NOT NULL
+);
+
+-- Tabla intermedia: un estudiante puede tomar N cursos
+--                  un curso puede tener N estudiantes
+CREATE TABLE inscripciones (
+    estudiante_id INT      UNSIGNED NOT NULL,
+    curso_id      INT      UNSIGNED NOT NULL,
+    fecha_alta    DATE     NOT NULL,
+    calificacion  DECIMAL(4,2) DEFAULT NULL,
+    PRIMARY KEY (estudiante_id, curso_id),    -- PK compuesta evita duplicados
+    FOREIGN KEY (estudiante_id) REFERENCES estudiantes(estudiante_id)
+        ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (curso_id)      REFERENCES cursos(curso_id)
+        ON DELETE CASCADE ON UPDATE CASCADE
+);
+\end{lstlisting}
+
+\textbf{Orden de inserción en tres pasos:}
+
+\begin{lstlisting}[style=sql, caption={Paso 1 — poblar ambas tablas padre}]
+-- Tabla padre A
+INSERT INTO estudiantes (nombre)
+VALUES ('Miguel Ríos'),
+       ('Sofía Castillo'),
+       ('Héctor Núñez');
+
+-- Tabla padre B
+INSERT INTO cursos (titulo, creditos)
+VALUES ('Bases de Datos',    6),
+       ('Álgebra Lineal',    4),
+       ('Redes de Cómputo',  5);
+\end{lstlisting}
+
+\begin{lstlisting}[style=sql, caption={Paso 2 — insertar en la tabla intermedia}]
+-- IDs resultantes (ejemplo):
+--   estudiante_id: 1=Miguel, 2=Sofía, 3=Héctor
+--   curso_id:      1=Bases de Datos, 2=Álgebra, 3=Redes
+
+INSERT INTO inscripciones (estudiante_id, curso_id, fecha_alta)
+VALUES
+    (1, 1, '2024-08-20'),   -- Miguel  -> Bases de Datos
+    (1, 3, '2024-08-20'),   -- Miguel  -> Redes de Cómputo
+    (2, 1, '2024-08-21'),   -- Sofía   -> Bases de Datos
+    (2, 2, '2024-08-21'),   -- Sofía   -> Álgebra Lineal
+    (3, 1, '2024-08-22'),   -- Héctor  -> Bases de Datos
+    (3, 2, '2024-08-22'),   -- Héctor  -> Álgebra Lineal
+    (3, 3, '2024-08-22');   -- Héctor  -> Redes de Cómputo
+\end{lstlisting}
+
+\begin{lstlisting}[style=sql, caption={Paso 3 — actualizar atributos propios de la relación}]
+-- La calificacion es un atributo de la RELACIÓN, no de ninguna entidad sola
+UPDATE inscripciones
+SET    calificacion = 9.2
+WHERE  estudiante_id = 1
+  AND  curso_id      = 1;
+\end{lstlisting}
+
+\begin{ejemplo}
+  Verificar las inscripciones de un estudiante con una consulta de control:
+
+\begin{lstlisting}[style=sql, caption={Consulta de verificación post-inserción N:M}]
+SELECT e.nombre        AS estudiante,
+       c.titulo        AS curso,
+       i.fecha_alta,
+       i.calificacion
+FROM   inscripciones AS i
+INNER JOIN estudiantes AS e ON i.estudiante_id = e.estudiante_id
+INNER JOIN cursos      AS c ON i.curso_id      = c.curso_id
+WHERE  e.nombre = 'Miguel Ríos';
+\end{lstlisting}
+\end{ejemplo}
+
+\begin{nota}
+  La \textbf{clave primaria compuesta} \texttt{(estudiante\_id, curso\_id)} en
+  la tabla intermedia garantiza que un mismo par no pueda insertarse dos veces,
+  cumpliendo la regla de integridad de entidad sin necesidad de un campo
+  \texttt{AUTO\_INCREMENT} adicional.
+\end{nota}
+
+% ── Resumen del módulo ────────────────────────────────────
+\subsection*{Resumen del módulo}
+
+\begin{table}[H]
+  \centering
+  \caption{Estrategias de inserción según la cardinalidad de la relación}
+  \renewcommand{\arraystretch}{1.3}
+  \rowcolors{2}{gray!10}{white}
+  \begin{tabularx}{\textwidth}{l l X}
+    \toprule
+    \textbf{Relación} & \textbf{Tablas involucradas}     & \textbf{Consideración clave}                              \\
+    \midrule
+    1:1               & Padre + hijo con FK \texttt{UNIQUE} & Insertar padre primero; usar \texttt{LAST\_INSERT\_ID()}  \\
+    1:N               & Padre + uno o más hijos          & Todos los hijos referencian el mismo padre                \\
+    N:M               & Dos padres + tabla intermedia    & Insertar ambos padres antes de poblar la tabla pivote     \\
+    \bottomrule
+  \end{tabularx}
+\end{table}

@@ -1,0 +1,235 @@
+\newpage
+\section{Escritura de Datos}
+
+Las sentencias de escritura forman parte del sublenguaje \textbf{DML}
+(\textit{Data Manipulation Language}) de SQL. Permiten insertar, modificar y
+eliminar filas en las tablas de una base de datos relacional.
+
+\begin{nota}
+  Toda operación DML es transaccional. En motores como MySQL/InnoDB o PostgreSQL,
+  los cambios pueden deshacerse con \texttt{ROLLBACK} mientras la transacción
+  no haya sido confirmada con \texttt{COMMIT}.
+\end{nota}
+
+% ─────────────────────────────────────────────────────────
+\subsection{\texttt{INSERT}}
+
+\begin{definicion}{INSERT}
+  Agrega \textbf{una o más filas} nuevas a una tabla. Los valores proporcionados
+  deben respetar los tipos de datos, restricciones \texttt{NOT NULL} y claves
+  foráneas definidas en el esquema.
+\end{definicion}
+
+\textbf{Sintaxis — una sola fila:}
+
+\begin{lstlisting}[style=sql, caption={INSERT de una fila con columnas explícitas}]
+INSERT INTO nombre_tabla (col1, col2, col3)
+VALUES (val1, val2, val3);
+\end{lstlisting}
+
+\begin{lstlisting}[style=sql, caption={INSERT sin lista de columnas (no recomendado)}]
+-- Los valores deben seguir exactamente el orden de la tabla
+INSERT INTO nombre_tabla
+VALUES (val1, val2, val3);
+\end{lstlisting}
+
+\begin{nota}
+  Especificar siempre la lista de columnas hace el código más robusto ante futuros
+  cambios en el esquema (columnas nuevas, reordenamiento, etc.).
+\end{nota}
+
+\textbf{Sintaxis — múltiples filas:}
+
+\begin{lstlisting}[style=sql, caption={INSERT de varias filas en una sola sentencia}]
+INSERT INTO nombre_tabla (col1, col2, col3)
+VALUES
+    (val1a, val2a, val3a),
+    (val1b, val2b, val3b),
+    (val1c, val2c, val3c);
+\end{lstlisting}
+
+\begin{ejemplo}
+  Poblar la tabla \texttt{productos} con tres artículos en una sola operación:
+
+\begin{lstlisting}[style=sql, caption={Inserción múltiple en la tabla productos}]
+INSERT INTO productos (nombre, precio, stock, categoria_id)
+VALUES
+    ('Teclado mecánico',  850.00, 40, 3),
+    ('Monitor 24"',      3200.00, 15, 3),
+    ('Silla ergonómica', 5400.00,  8, 5);
+\end{lstlisting}
+
+  Los campos marcados con \texttt{AUTO\_INCREMENT} (\texttt{producto\_id}) se
+  omiten; el motor los genera automáticamente.
+\end{ejemplo}
+
+\textbf{Inserción a partir de un \texttt{SELECT}:}
+
+\begin{lstlisting}[style=sql, caption={INSERT ... SELECT: copiar filas desde otra tabla}]
+INSERT INTO productos_archivo (nombre, precio, categoria_id)
+SELECT nombre, precio, categoria_id
+FROM   productos
+WHERE  stock = 0;
+\end{lstlisting}
+
+% ─────────────────────────────────────────────────────────
+\subsection{\texttt{UPDATE}}
+
+\begin{definicion}{UPDATE}
+  Modifica los valores de \textbf{una o más columnas} en las filas que satisfacen
+  la condición \texttt{WHERE}. Si se omite \texttt{WHERE}, la actualización afecta
+  a \textbf{todas} las filas de la tabla.
+\end{definicion}
+
+\textbf{Sintaxis general:}
+
+\begin{lstlisting}[style=sql, caption={Sintaxis de UPDATE con WHERE}]
+UPDATE nombre_tabla
+SET    col1 = nuevo_val1,
+       col2 = nuevo_val2
+WHERE  condicion;
+\end{lstlisting}
+
+\begin{ejemplo}
+  Aplicar un incremento de 10\,\% al precio de todos los productos de la
+  categoría 3:
+
+\begin{lstlisting}[style=sql, caption={UPDATE con expresión aritmética}]
+UPDATE productos
+SET    precio = precio * 1.10
+WHERE  categoria_id = 3;
+\end{lstlisting}
+\end{ejemplo}
+
+\begin{ejemplo}
+  Actualizar varios campos de un registro específico:
+
+\begin{lstlisting}[style=sql, caption={UPDATE de múltiples columnas por clave primaria}]
+UPDATE productos
+SET    nombre  = 'Teclado mecánico RGB',
+       stock   = 55,
+       precio  = 920.00
+WHERE  producto_id = 1;
+\end{lstlisting}
+\end{ejemplo}
+
+\begin{nota}
+  \textbf{Buenas prácticas antes de ejecutar un UPDATE:}
+  \begin{enumerate}
+    \item Verificar la condición con un \texttt{SELECT} previo usando el mismo
+          \texttt{WHERE}.
+    \item Ejecutar dentro de una transacción explícita para poder hacer
+          \texttt{ROLLBACK} si el resultado no es el esperado.
+    \item En MySQL, activar \texttt{sql\_safe\_updates = 1} para bloquear
+          \texttt{UPDATE} sin \texttt{WHERE} o sin clave en la condición.
+  \end{enumerate}
+\end{nota}
+
+\textbf{UPDATE con JOIN} (MySQL / MariaDB):
+
+\begin{lstlisting}[style=sql, caption={UPDATE que referencia otra tabla mediante JOIN}]
+UPDATE productos AS p
+INNER JOIN categorias AS c
+    ON p.categoria_id = c.categoria_id
+SET p.precio = p.precio * 0.90
+WHERE c.nombre = 'Electrónica';
+\end{lstlisting}
+
+% ─────────────────────────────────────────────────────────
+\subsection{\texttt{DELETE}}
+
+\begin{definicion}{DELETE}
+  Elimina las filas que cumplen la condición \texttt{WHERE}. Al igual que
+  \texttt{UPDATE}, si se omite \texttt{WHERE} se eliminan \textbf{todas} las
+  filas de la tabla, aunque la estructura y los metadatos se conservan.
+\end{definicion}
+
+\textbf{Sintaxis general:}
+
+\begin{lstlisting}[style=sql, caption={Sintaxis de DELETE con WHERE}]
+DELETE FROM nombre_tabla
+WHERE condicion;
+\end{lstlisting}
+
+\begin{ejemplo}
+  Eliminar los productos sin stock que pertenecen a la categoría 5:
+
+\begin{lstlisting}[style=sql, caption={DELETE con condición compuesta}]
+DELETE FROM productos
+WHERE stock = 0
+  AND categoria_id = 5;
+\end{lstlisting}
+\end{ejemplo}
+
+\textbf{DELETE con JOIN} (MySQL / MariaDB):
+
+\begin{lstlisting}[style=sql, caption={DELETE que filtra mediante una tabla relacionada}]
+DELETE p
+FROM   productos AS p
+INNER JOIN categorias AS c
+    ON p.categoria_id = c.categoria_id
+WHERE  c.activa = 0;
+\end{lstlisting}
+
+% ── DELETE vs TRUNCATE ────────────────────────────────────
+\subsubsection*{Diferencias entre \texttt{DELETE} y \texttt{TRUNCATE}}
+
+\begin{table}[H]
+  \centering
+  \caption{Comparación entre \texttt{DELETE} y \texttt{TRUNCATE}}
+  \renewcommand{\arraystretch}{1.3}
+  \rowcolors{2}{gray!10}{white}
+  \begin{tabularx}{\textwidth}{>{\bfseries}l X X}
+    \toprule
+    \textbf{Característica}     & \textbf{\texttt{DELETE}}                        & \textbf{\texttt{TRUNCATE}}                   \\
+    \midrule
+    Sublenguaje SQL             & DML                                             & DDL                                          \\
+    Cláusula \texttt{WHERE}     & Sí — elimina filas selectivamente               & No — elimina todas las filas                 \\
+    Transaccional               & Sí — admite \texttt{ROLLBACK}                   & Depende del motor; en MySQL no               \\
+    Velocidad                   & Más lenta (registro fila a fila)                & Más rápida (libera páginas de datos)         \\
+    Reinicio de \texttt{AUTO\_INCREMENT} & No — el contador no se reinicia       & Sí — el contador vuelve a 1                  \\
+    Activación de \textit{triggers} & Sí                                         & No en la mayoría de motores                  \\
+    Restricciones de FK         & Respeta \texttt{ON DELETE} definido en el FK   & Falla si existen referencias activas         \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\begin{lstlisting}[style=sql, caption={Diferencia práctica entre DELETE y TRUNCATE}]
+-- Elimina solo las filas del año 2020 (reversible)
+DELETE FROM ventas
+WHERE YEAR(fecha) = 2020;
+
+-- Vacía la tabla completa y reinicia el auto_increment (irreversible en MySQL)
+TRUNCATE TABLE ventas;
+\end{lstlisting}
+
+\begin{nota}
+  Ante la duda entre \texttt{DELETE} y \texttt{TRUNCATE}, preferir
+  \texttt{DELETE} dentro de una transacción explícita: ofrece mayor control y
+  trazabilidad. Reservar \texttt{TRUNCATE} para entornos de desarrollo o
+  procesos de carga masiva donde la velocidad es crítica y no se requiere
+  reversibilidad.
+\end{nota}
+
+% ── Resumen del módulo ────────────────────────────────────
+\subsection*{Resumen del módulo}
+
+\begin{table}[H]
+  \centering
+  \caption{Sentencias DML de escritura}
+  \renewcommand{\arraystretch}{1.3}
+  \rowcolors{2}{gray!10}{white}
+  \begin{tabularx}{\textwidth}{>{\ttfamily}l l X}
+    \toprule
+    \textbf{Sentencia}  & \textbf{Acción}          & \textbf{Consideración clave}                          \\
+    \midrule
+    INSERT              & Agregar filas            & Especificar siempre la lista de columnas              \\
+    INSERT \ldots SELECT & Copiar filas            & Útil para archivado o migración de datos              \\
+    UPDATE              & Modificar filas          & Nunca omitir \texttt{WHERE}; verificar con SELECT previo \\
+    DELETE              & Eliminar filas           & Transaccional; respeta triggers y claves foráneas     \\
+    TRUNCATE            & Vaciar tabla completa    & DDL, más rápido, pero no reversible en MySQL          \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+

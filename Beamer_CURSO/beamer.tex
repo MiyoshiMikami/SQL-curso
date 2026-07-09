@@ -1,0 +1,872 @@
+%=============================================================================
+%  CURSO DE SQL Y BASES DE DATOS RELACIONALES
+%  Presentación Beamer — Edición Profesional y Optimizada
+%  Autor: Miyoshi Mikami — CNBV
+%=============================================================================
+
+\documentclass[12pt, aspectratio=169, UTF8]{beamer}
+
+% ─── Tema base ────────────────────────────────────────────
+\usetheme{Madrid}
+
+% ─── Paleta de colores institucional y tecnológica ────────
+\definecolor{sqlblue}{RGB}{15, 52, 96}       % Azul marino profundo
+
+\definecolor{sqlgray}{RGB}{44, 62, 80}       % Gris oscuro para texto
+\definecolor{sqlyellow}{RGB}{241, 196, 15}   % Amarillo acento
+
+\definecolor{sqlred}{RGB}{192, 57, 43}       % Rojo alerta
+\definecolor{codefg}{RGB}{228, 232, 237}     % Texto código (mejor contraste)
+\definecolor{codebg}{RGB}{13, 17, 23}        % Fondo código (GitHub Dark real)
+
+% ─── Aplicar paleta al tema Beamer ────────────────────────
+\setbeamercolor{palette primary}  {bg=sqlblue,   fg=white}
+\setbeamercolor{palette secondary}{bg=sqlblue!85,fg=white}
+\setbeamercolor{palette tertiary} {bg=sqlblue!70,fg=white}
+\setbeamercolor{palette quaternary}{bg=sqlblue,  fg=white}
+\setbeamercolor{structure}        {fg=sqlblue}
+\setbeamercolor{frametitle}       {bg=sqlblue, fg=white}
+\setbeamercolor{title}            {fg=white}
+\setbeamercolor{subtitle}         {fg=sqllight}
+\setbeamercolor{section in toc}   {fg=sqlblue}
+
+% Bloques estructurados estándar
+\setbeamercolor{block title}      {bg=sqlaccent, fg=white}
+\setbeamercolor{block body}       {bg=sqllight,  fg=sqlgray}
+\setbeamercolor{block title alerted}{bg=sqlred,  fg=white}
+\setbeamercolor{block body alerted} {bg=sqlred!8, fg=sqlgray}
+\setbeamercolor{block title example}{bg=sqlgreen,fg=white}
+\setbeamercolor{block body example} {bg=sqlgreen!8,fg=sqlgray}
+
+% ─── Fuentes y Paquetes Esenciales ────────────────────────
+\usepackage[T1]{fontenc}
+\usepackage[spanish, es-tabla]{babel}
+\usepackage{lmodern}
+\usepackage{microtype}
+
+% Íconos y símbolos matemáticos
+\usepackage{amssymb, amsmath}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{array}
+
+% NOTA: Se eliminó 'enumitem' porque rompe el comportamiento nativo 
+% de las listas en Beamer (animaciones, espaciados y templates).
+
+% ─── Código SQL con Resaltado Inteligente ─────────────────
+\usepackage{listings}
+
+\lstdefinestyle{sqlstyle}{
+  language         = SQL,
+  basicstyle       = \ttfamily\footnotesize\color{codefg},
+  keywordstyle     = \bfseries\color{sqlaccent},
+  stringstyle      = \color{sqlyellow},
+  commentstyle     = \itshape\color{gray!65},
+  numberstyle      = \tiny\color{gray!50},
+  numbers          = left,
+  numbersep        = 6pt,
+  stepnumber       = 1,
+  backgroundcolor  = \color{codebg},
+  frame            = single,
+  frameround       = tttt,
+  framexleftmargin = 2pt,
+  rulecolor        = \color{sqlblue!30},
+  tabsize          = 4,
+  showstringspaces = false,
+  breaklines       = true,
+  breakatwhitespace= true,
+  xleftmargin      = 0.4cm,
+  xrightmargin     = 0.1cm,
+  aboveskip        = 6pt,
+  belowskip        = 6pt,
+  extendedchars    = true,
+  literate         = {á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1 {ñ}{{\~n}}1 {Ú}{{\'U}}1 {Ñ}{{\~N}}1 {¿}{{{\textquestiondown}}}1 {ó}{{\'o}}1,
+  morekeywords     = {
+    DATABASE, DATABASES, TABLES, SHOW, USE, ENGINE, CHARSET,
+    AUTO_INCREMENT, UNSIGNED, TINYINT, SMALLINT, MEDIUMINT,
+    BIGINT, DECIMAL, FLOAT, DOUBLE, DATETIME, TIMESTAMP,
+    VARCHAR, TEXT, BLOB, ENUM, SET, DESCRIBE, DESC,
+    FOREIGN KEY, REFERENCES, ON DELETE, ON UPDATE,
+    CASCADE, SET NULL, RESTRICT, TRIGGER, VIEW,
+    PROCEDURE, CALL, DELIMITER, SAVEPOINT, ROLLBACK,
+    BEGIN, COMMIT, START, TRANSACTION, SIGNAL, SQLSTATE,
+    MATCH, AGAINST, FULLTEXT, SPATIAL, UNIQUE, INDEX,
+    LAST_INSERT_ID, COALESCE, IFNULL, FORMAT, CONCAT,
+    CONCAT_WS, YEAR, DATEDIFF, ROUND, UPPER, LOWER,
+    LENGTH, TRIM, SUBSTRING, NOW, BETWEEN, LIKE, IN,
+    HAVING, GROUP, ORDER, LIMIT, OFFSET, UNION, ALL,
+    INNER, LEFT, RIGHT, JOIN, ON, AS, DISTINCT, CASE,
+    WHEN, THEN, ELSE, END, COUNT, SUM, AVG, MIN, MAX,
+    INSERT, UPDATE, DELETE, CREATE, DROP, ALTER, TRUNCATE,
+    ADD, RENAME, MODIFY, COLUMN, TABLE, PRIMARY, KEY,
+    NOT, NULL, DEFAULT, CHECK, WITH, ROLLUP, IF, EXISTS, CURDATE
+  }
+}
+\lstset{style=sqlstyle}
+
+% ─── Contenedores Estilizados (tcolorbox) ─────────────────
+\usepackage[many]{tcolorbox}
+\tcbuselibrary{skins}
+
+\newtcolorbox{sqlbox}[1]{
+  enhanced,
+  colback   = codebg,
+  colframe  = sqlaccent,
+  coltitle  = white,
+  fonttitle = \bfseries\small\ttfamily,
+  title     = #1,
+  top=3pt, bottom=3pt, left=5pt, right=5pt,
+  sharp corners,
+  boxrule=1pt,
+  shadow={2pt}{-2pt}{0pt}{black!20}
+}
+
+% ─── Personalización Estética de Listas ───────────────────
+\setbeamertemplate{itemize items}[circle]
+\setbeamercolor{itemize item}{fg=sqlaccent}
+\setbeamercolor{itemize subitem}{fg=sqlyellow}
+\setbeamertemplate{enumerate items}[default]
+\setbeamercolor{enumerate item}{fg=sqlaccent}
+
+% ─── Footer y Limpieza de Barra de Navegación ─────────────
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{footline}{
+  \leavevmode%
+  \hbox{%
+  \begin{beamercolorbox}[wd=.333333\paperwidth,ht=2.25ex,dp=1ex,left,leftskip=10pt]{palette primary}%
+    \usebeamerfont{author in head/foot}\insertshortauthor\ (\insertshortinstitute)
+  \end{beamercolorbox}%
+  \begin{beamercolorbox}[wd=.333333\paperwidth,ht=2.25ex,dp=1ex,center]{palette secondary}%
+    \usebeamerfont{title in head/foot}\insertshorttitle
+  \end{beamercolorbox}%
+  \begin{beamercolorbox}[wd=.333333\paperwidth,ht=2.25ex,dp=1ex,right,rightskip=10pt]{palette primary}%
+    \usebeamerfont{date in head/foot}\insertshortdate\hspace*{2em}
+    \insertframenumber{} / \inserttotalframenumber
+  \end{beamercolorbox}%
+  }\vskip0pt%
+}
+
+% ─── Automatización de Páginas de Transición ──────────────
+\AtBeginSection[]{
+  \begin{frame}
+    \vfill
+    \centering
+    \begin{beamercolorbox}[sep=12pt,center,shadow=true,rounded=true]{palette primary}
+      \usebeamerfont{title}\Huge\insertsectionhead\par%
+    \end{beamercolorbox}
+    \vfill
+  \end{frame}
+}
+
+% ─── Metadata del Documento ───────────────────────────────
+\title[Curso de SQL]{Curso de SQL y Bases de Datos Relacionales}
+\subtitle{Inserción, Consulta y Administración Eficiente de Información}
+\author[Miyoshi Mikami]{Miyoshi Mikami \\ \small \href{mailto:miyoshikamium@gmail.mx}{\texttt{miyoshikamium@gmail.mx}}}
+\institute[CNBV]{Comisión Nacional Bancaria y de Valores}
+\date[Junio 2026]{Versión 4.5 — Junio 2026}
+
+%=============================================================================
+\begin{document}
+%=============================================================================
+
+% ── PORTADA ──────────────────────────────────────────────
+{
+\setbeamercolor{background canvas}{bg=sqlblue}
+\begin{frame}[plain]
+  \titlepage
+\end{frame}
+}
+
+% ── ÍNDICE ───────────────────────────────────────────────
+\begin{frame}{Contenido del Curso}
+  \tableofcontents[hideallsubsections]
+\end{frame}
+
+%=============================================================================
+\section{Historia e Introducción}
+%=============================================================================
+
+\begin{frame}{El Problema de los Datos}
+  \begin{columns}[T]
+    \column{0.55\textwidth}
+      \textbf{Evolución del almacenamiento humano:}
+      \begin{itemize}
+        \item Tablillas de arcilla sumerias ($\sim$3000 a.C.)
+        \item Registros contables del Imperio Romano
+        \item Libros de contabilidad medievales
+      \end{itemize}
+      \vspace{6pt}
+      El siglo XX transformó esto en una \textbf{disciplina formal}:
+      \begin{itemize}
+        \item Crecimiento exponencial de registros masivos
+        \item Necesidad crítica de velocidad y fiabilidad
+      \end{itemize}
+    \column{0.42\textwidth}
+      \begin{block}{Pregunta clave}
+        ¿Cómo organizar grandes volúmenes de datos para que múltiples programas accedan de forma concurrente, eficiente y segura?
+      \end{block}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Modelos Pre-Relacionales (1950–1970)}
+  \begin{columns}[T]
+    \column{0.48\textwidth}
+      \begin{block}{Modelo Jerárquico}
+        \begin{itemize}
+          \item Estructura rígida de \textbf{árbol}
+          \item IBM IMS (1966) — Misión Apolo
+          \item Relaciones N:M imposibles sin duplicidad redundante
+        \end{itemize}
+      \end{block}
+    \column{0.48\textwidth}
+      \begin{block}{Modelo de Red (CODASYL 1969)}
+        \begin{itemize}
+          \item Punteros físicos entre registros
+          \item Soporta relaciones N:M nativas
+          \item Complejidad de mantenimiento extrema
+        \end{itemize}
+      \end{block}
+  \end{columns}
+  \vspace{6pt}
+  \begin{alertblock}{Problema fundamental: Dependencia físico-lógica}
+    Los programas requerían conocer la ubicación exacta en el disco. Cualquier modificación estructural rompía la compatibilidad de la aplicación.
+  \end{alertblock}
+\end{frame}
+
+\begin{frame}{Edgar F. Codd y el Modelo Relacional (1970)}
+  \begin{columns}[T]
+    \column{0.56\textwidth}
+      En junio de \textbf{1970}, Codd publica su artículo histórico en la \emph{ACM}:
+      \vspace{4pt}
+      \begin{block}{Modelo Relacional}
+        Representación uniforme mediante \textbf{tablas bidimensionales}. Operaciones basadas en el \textbf{álgebra relacional}, abstrayendo la arquitectura física subyacente.
+      \end{block}
+      \vspace{4pt}
+      \textbf{Pilares de la revolución:}
+      \begin{enumerate}
+        \item Independencia total físico-lógica
+        \item Rigor matemático (Teoría de conjuntos)
+        \item Enfoque netamente \emph{declarativo}
+      \end{enumerate}
+    \column{0.40\textwidth}
+      \begin{exampleblock}{Premio Turing 1981}
+        Otorgado a Edgar F. Codd por cambiar de forma permanente las ciencias de la computación.
+      \end{exampleblock}
+      \begin{block}{Las 12 Reglas (1985)}
+        Métricas obligatorias para evaluar la madurez relacional de un SGBD.
+      \end{block}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Nacimiento de SQL}
+  \begin{columns}[T]
+    \column{0.56\textwidth}
+      \begin{itemize}
+        \item \textbf{1973} — IBM desarrolla el proyecto \emph{System R}
+        \item Chamberlin y Boyce definen \textbf{SEQUEL} (\emph{Structured English Query Language})
+        \item Rediseñado a \textbf{SQL} por derechos de marca
+        \item \textbf{1979} — Oracle V2: Lanzamiento del primer SGBD comercial del mercado
+        \item \textbf{1983} — Comercialización formal de IBM DB2
+        \item \textbf{1986} — Adopción del primer estándar oficial ANSI/ISO
+      \end{itemize}
+    \column{0.40\textwidth}
+      \begin{alertblock}{Pronunciación Oficial}
+        \begin{itemize}
+          \item Coloquial anglosajón: \textit{"sequel"}
+          \item Estándar formal ISO: \textbf{"ese-cu-ele"}
+        \end{itemize}
+        Adoptamos la nomenclatura formal y estandarizada.
+      \end{alertblock}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Estándares del Lenguaje SQL}
+  \begin{center}
+  \small
+  \renewcommand{\arraystretch}{1.15}
+  \begin{tabularx}{0.95\textwidth}{@{} l l X @{}}
+    \toprule
+    \textbf{Versión} & \textbf{Año} & \textbf{Aportaciones e Innovaciones Clave} \\
+    \midrule
+    SQL-86    & 1986 & Formalización inicial de las sintaxis DML y DDL básico. \\
+    SQL-92    & 1992 & Introducción formal de \texttt{JOIN} explícitos y subconsultas. \\
+    SQL:1999  & 1999 & Soporte de recursión (\texttt{WITH}), \textit{triggers} y POO básica. \\
+    SQL:2003  & 2003 & Funciones analíticas de ventana (\texttt{OVER}) e integración XML. \\
+    SQL:2016  & 2016 & Compatibilidad e interoperabilidad nativa con formato JSON. \\
+    SQL:2023  & 2023 & Integración con bases de datos de grafos y uso extendido de \textit{arrays}. \\
+    \bottomrule
+  \end{tabularx}
+  \end{center}
+  \begin{alertblock}{Portabilidad}
+    Ningún motor comercial cubre el estándar al 100\%; las funciones avanzadas requieren adecuación según la distribución (PostgreSQL, MySQL, Oracle).
+  \end{alertblock}
+\end{frame}
+
+%=============================================================================
+\section{Fundamentos de Bases de Datos}
+%=============================================================================
+
+\begin{frame}{¿Qué es una Base de Datos?}
+  \begin{block}{Definición Formal}
+    Colección \textbf{organizada, persistente y compartible} de registros interrelacionados, diseñada metodológicamente para \textbf{eliminar redundancias} y preservar consistencia.
+  \end{block}
+  \vspace{4pt}
+  \begin{columns}[T]
+    \column{0.48\textwidth}
+      \textbf{Dimensiones estructurales:}
+      \begin{itemize}
+        \item \textbf{Persistencia:} Resguardo robusto en almacenamiento estable.
+        \item \textbf{Concurrencia:} Mecanismos de acceso seguro multiusuario.
+        \item \textbf{Normalización:} Estructuras lógicas eficientes y limpias.
+      \end{itemize}
+    \column{0.48\textwidth}
+      \begin{exampleblock}{Caso de Aplicación Práctica}
+        \textbf{Sin Base de Datos:} Redundancia descontrolada en archivos aislados.\\[4pt]
+        \textbf{Modelo Relacional:} Identidades únicas mapeadas mediante relaciones atómicas.
+      \end{exampleblock}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Sistema de Gestión de Bases de Datos (SGBD)}
+  \begin{block}{Definición Técnica}
+    Software sofisticado que actúa como capa de abstracción intermedia entre el almacenamiento de bajo nivel y las solicitudes lógicas de los usuarios.
+  \end{block}
+  \begin{columns}[T]
+    \column{0.48\textwidth}
+      \textbf{Modelo de Tres Niveles ANSI/SPARC:}
+      \begin{enumerate}
+        \item \textbf{Interno / Físico:} Organización binaria en disco.
+        \item \textbf{Conceptual:} Tablas, esquemas, restricciones.
+        \item \textbf{Externo / Vistas:} Interfaces lógicas personalizadas.
+      \end{enumerate}
+    \column{0.48\textwidth}
+      \textbf{Funcionalidad Core:}
+      \begin{itemize}
+        \item Motor de optimización de ejecución.
+        \item Aislamiento integral concurrente.
+        \item Recuperación automática ante fallos de energía.
+      \end{itemize}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Equivalencia Léxica y Claves}
+  \begin{center}
+  \small
+  \renewcommand{\arraystretch}{1.2}
+  \begin{tabularx}{0.9\textwidth}{@{} X X X @{}}
+    \toprule
+    \textbf{Término Académico} & \textbf{Terminología SQL} & \textbf{Concepto Visual} \\
+    \midrule
+    Relación  & Tabla            & Matriz de datos \\
+    Tupla     & Fila / Registro  & Línea horizontal de registros \\
+    Atributo  & Columna / Campo  & Componente vertical estructurado \\
+    Dominio   & Tipo de Dato     & Especificación y reglas de valor \\
+    Esquema   & Definición       & Metadatos estructurales de la tabla \\
+    \bottomrule
+  \end{tabularx}
+  \end{center}
+  \begin{columns}[T]
+    \column{0.48\textwidth}
+      \begin{block}{Clave Primaria (PK)}
+        Atributo que identifica de manera única e inequívoca una fila. Prohíbe nulos (\texttt{NOT NULL}).
+      \end{block}
+    \column{0.48\textwidth}
+      \begin{block}{Clave Foránea (FK)}
+        Vínculo referencial apuntando a una PK externa. Asegura consistencia relacional.
+      \end{block}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{El Paradigma de las Propiedades ACID}
+  \begin{columns}[T]
+    \column{0.48\textwidth}
+      \begin{block}{\textbf{A}tomicidad}
+        La transacción se procesa de forma binaria: se ejecuta al 100\% o se revierte por completo.
+      \end{block}
+      \begin{block}{\textbf{C}onsistencia}
+        Los cambios mueven el sistema únicamente entre estados lógicos válidos del esquema.
+      \end{block}
+    \column{0.48\textwidth}
+      \begin{block}{\textbf{I}solamiento}
+        Las transacciones concurrentes se ejecutan sin interferir en sus estados intermedios.
+      \end{block}
+      \begin{block}{\textbf{D}urabilidad}
+        Una vez confirmado con \texttt{COMMIT}, el registro es imborrable ante fallos críticos.
+      \end{block}
+  \end{columns}
+  \begin{exampleblock}{Ejemplo Financiero Basal}
+    Una transferencia bancaria exige el descuento en Origen \textbf{y} abono en Destino. Si falla la red a la mitad, la \textbf{atomicidad} ejecuta un rollback inmediato.
+  \end{exampleblock}
+\end{frame}
+
+\begin{frame}{Sublenguajes Especializados en SQL}
+  \begin{center}
+  \small
+  \renewcommand{\arraystretch}{1.25}
+  \begin{tabularx}{0.92\textwidth}{@{} l l X @{}}
+    \toprule
+    \textbf{Sublenguaje} & \textbf{Sigla} & \textbf{Propósito y Comandos Cardinales} \\
+    \midrule
+    Data Definition Language   & \textbf{DDL} & Define y altera estructuras de datos: \texttt{CREATE, ALTER, DROP}. \\
+    Data Manipulation Language & \textbf{DML} & Operación de datos residentes: \texttt{SELECT, INSERT, UPDATE, DELETE}. \\
+    Data Control Language      & \textbf{DCL} & Gestión de esquemas de seguridad y accesos: \texttt{GRANT, REVOKE}. \\
+    Transaction Control Lang.  & \textbf{TCL} & Orquestación de bloques operativos: \texttt{COMMIT, ROLLBACK, SAVEPOINT}. \\
+    \bottomrule
+  \end{tabularx}
+  \end{center}
+  \begin{alertblock}{Naturaleza Declarativa}
+    El analista programa el \textbf{QUÉ} requiere. El Optimizador del motor calcula analíticamente la ruta algorítmica (\textbf{CÓMO}) más rápida.
+  \end{alertblock}
+\end{frame}
+
+%=============================================================================
+\section{Consulta de Datos: SELECT}
+%=============================================================================
+
+\begin{frame}[fragile]{Arquitectura de una Consulta SELECT}
+  \begin{sqlbox}{Sintaxis Canónica}
+SELECT [ALL | DISTINCT] lista_columnas
+FROM tabla [[AS] alias]
+[WHERE condiciones_de_filtrado_lineal]
+[GROUP BY expresiones_de_agrupamiento]
+[HAVING filtros_de_agregacion_grupal]
+[ORDER BY criterio_orden [ASC | DESC]]
+[LIMIT registros_maximos OFFSET desfasamiento];
+  \end{sqlbox}
+  \vspace{2pt}
+  \textbf{Orden de Ejecución Lógica del Motor Interno:}
+  \begin{center}
+    \footnotesize
+    \color{sqlblue}\textbf{FROM} $\rightarrow$ \textbf{WHERE} $\rightarrow$ \textbf{GROUP BY} $\rightarrow$ \textbf{HAVING} $\rightarrow$ \textbf{SELECT} $\rightarrow$ \textbf{DISTINCT} $\rightarrow$ \textbf{ORDER BY} $\rightarrow$ \textbf{LIMIT}
+  \end{center}
+\end{frame}
+
+\begin{frame}[fragile]{Proyección Eficiente y Campos Calculados}
+  \begin{sqlbox}{Casos de Proyección Atómica}
+-- Proyección explícita limpia
+SELECT nombre, departamento, salario 
+FROM empleados;
+
+-- Inclusión de expresiones algebraicas dinámicas
+SELECT nombre,
+       salario * 12 AS salario_anual,
+       salario * 0.10 AS provision_bono,
+       'Vigente' AS estatus_operativo
+FROM empleados;
+  \end{sqlbox}
+  \begin{alertblock}{Restricción de Buenas Prácticas}
+    Se debe omitir el uso de \texttt{SELECT *} en arquitecturas productivas. Incrementa la latencia de red, deshabilita optimizaciones de índices e induce errores al alterar esquemas.
+  \end{alertblock}
+\end{frame}
+
+\begin{frame}[fragile]{Filtros Lineales mediante WHERE}
+  \begin{columns}[T]
+    \column{0.40\textwidth}
+      \small
+      \renewcommand{\arraystretch}{1.2}
+      \begin{tabular}{@{} c l @{}}
+        \toprule
+        \textbf{Operador} & \textbf{Significado Analítico} \\
+        \midrule
+        \texttt{=}   & Equivalencia estricta \\
+        \texttt{<>} o \texttt{!=} & Discrepancia lógica \\
+        \texttt{>}, \texttt{<}   & Mayor / Menor estricto \\
+        \texttt{>=}, \texttt{<=} & Límites inclusivos \\
+        \bottomrule
+      \end{tabular}
+      \vspace{6pt}
+      \begin{exampleblock}{Mecánica}
+        Evalúa registro por registro; solo los bloques verdaderos (\texttt{TRUE}) se integran a la memoria temporal.
+      \end{exampleblock}
+    \column{0.56\textwidth}
+      \begin{sqlbox}{Uso de Predicados de Filtrado}
+SELECT nombre, cargo, salario
+FROM empleados
+WHERE departamento = 'TI'
+  AND salario > 45000;
+      \end{sqlbox}
+  \end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Ordenamiento y Paginación de Datos}
+  \begin{sqlbox}{Sintaxis de Ordenamiento y Control de Bloques}
+-- Ordenamiento jerárquico multicriterio
+SELECT nombre, departamento, salario
+FROM empleados
+ORDER BY departamento ASC, salario DESC;
+
+-- Paginación de datos eficiente (Página 2, tamaño 3)
+SELECT nombre, departamento
+FROM empleados
+ORDER BY nombre ASC
+LIMIT 3 OFFSET 3;
+  \end{sqlbox}
+  \begin{alertblock}{Determinismo en Paginación}
+    Utilizar \texttt{LIMIT} sin definir un \texttt{ORDER BY} explícito quita el determinismo a la consulta. El motor puede regresar conjuntos inconsistentes según el estado interno de las páginas del disco.
+  \end{alertblock}
+\end{frame}
+
+%=============================================================================
+\section{Modificadores: Parte 1}
+%=============================================================================
+
+\begin{frame}[fragile]{Filtros Avanzados y Operadores de Patrón}
+  \begin{sqlbox}{Cláusula DISTINCT para Valores Únicos}
+SELECT DISTINCT departamento FROM empleados;
+  \end{sqlbox}
+  \vspace{4pt}
+  \begin{sqlbox}{Evaluación de Cadenas mediante LIKE y Comodines}
+SELECT nombre FROM empleados 
+WHERE nombre LIKE 'A%';     -- Cadenas con inicio en 'A'
+WHERE nombre LIKE '%ez';    -- Apellidos con terminación 'ez'
+WHERE nombre LIKE '%ar%';   -- Subcadenas internas
+WHERE nombre LIKE '_o%';    -- Fila con 'o' fijada en segunda posición
+  \end{sqlbox}
+  \begin{center}
+    \footnotesize
+    \texttt{\%} $\rightarrow$ Comodín para n caracteres intermedios. \quad \texttt{\_} $\rightarrow$ Comodín de espacio posicional único.
+  \end{center}
+\end{frame}
+
+\begin{frame}[fragile]{Precedencia y Operadores Booleanos}
+  \begin{columns}[T]
+    \column{0.40\textwidth}
+      \small
+      \renewcommand{\arraystretch}{1.2}
+      \begin{tabular}{@{} l l @{}}
+        \toprule
+        \textbf{Operador} & \textbf{Jerarquía de Evaluación} \\
+        \midrule
+        \texttt{NOT} & Prioridad Máxima \\
+        \texttt{AND} & Prioridad Intermedia \\
+        \texttt{OR}  & Prioridad Baja \\
+        \bottomrule
+      \end{tabular}
+      \vspace{10pt}
+      \begin{alertblock}{Peligro Lógico}
+        Omitir el aislamiento lógico de las sentencias altera drásticamente el resultado debido a la prioridad intrínseca del \texttt{AND}.
+      \end{alertblock}
+    \column{0.56\textwidth}
+      \begin{sqlbox}{Agrupamiento Explicito con Paréntesis}
+SELECT nombre, salario
+FROM empleados
+WHERE (departamento = 'TI' AND cargo = 'Gerente')
+   OR (departamento = 'Ventas' AND salario > 30000);
+      \end{sqlbox}
+  \end{columns}
+\end{frame}
+
+%=============================================================================
+\section{Modificadores: Parte 2}
+%=============================================================================
+
+\begin{frame}[fragile]{Funciones de Agregación y Métricas de Grupo}
+  \begin{sqlbox}{Métricas de Agregación Estándar}
+SELECT departamento,
+       COUNT(*) AS total_nomina,
+       ROUND(AVG(salario), 2) AS salario_promedio,
+       SUM(salario) AS costo_operativo,
+       MIN(salario) AS sueldo_piso,
+       MAX(salario) AS sueldo_techo
+FROM empleados
+GROUP BY departamento
+HAVING AVG(salario) > 40000
+ORDER BY costo_operativo DESC;
+  \end{sqlbox}
+  \begin{exampleblock}{Diferenciación Clave en Optimización}
+    \textbf{WHERE:} Evalúa y descarta registros individuales \textit{antes} del proceso de consolidación en memoria.\\
+    \textbf{HAVING:} Evalúa propiedades agregadas sobre los bloques estructurados \textit{después} del armado grupal.
+  \end{exampleblock}
+\end{frame}
+
+\begin{frame}[fragile]{Rangos, Listas y Funciones de Formato}
+  \begin{sqlbox}{Predicados de Inclusión: IN y BETWEEN}
+-- Evaluación eficiente de conjuntos cerrados
+SELECT nombre FROM empleados WHERE departamento IN ('Ventas', 'TI', 'Finanzas');
+
+-- Evaluación inclusiva de límites vectoriales
+SELECT nombre FROM empleados WHERE salario BETWEEN 35000 AND 52000;
+  \end{sqlbox}
+  \vspace{4pt}
+  \begin{sqlbox}{Operaciones de Salida y Concatenación}
+SELECT nombre AS empleado,
+       CONCAT(nombre, ' — ', cargo) AS etiqueta_puesto
+FROM empleados;
+  \end{sqlbox}
+\end{frame}
+
+\begin{frame}[fragile]{Estructuras Condicionales y Tratamiento de Nulos}
+  \begin{sqlbox}{Evaluación Lógica mediante CASE WHEN}
+SELECT nombre, salario,
+       CASE 
+            WHEN salario >= 55000 THEN 'Estructura Senior'
+            WHEN salario >= 45000 THEN 'Estructura Mid'
+            ELSE 'Estructura Junior'
+       END AS tabulador_puesto
+FROM empleados;
+  \end{sqlbox}
+  \vspace{4pt}
+  \begin{sqlbox}{Manejo de la Ausencia de Datos (Valores NULL)}
+-- Sustitución directa parametrizada
+SELECT IFNULL(telefono, 'Sin Registro') FROM empleados;
+
+-- Evaluación de cortocircuito secuencial vectorizada
+SELECT COALESCE(tel_celular, tel_fijo, email, 'Incomunicable') AS contacto_oficial
+FROM empleados;
+  \end{sqlbox}
+\end{frame}
+
+%=============================================================================
+\section{Consulta de Datos Relacionados}
+%=============================================================================
+
+\begin{frame}{Álgebra de JOINs y Combinaciones Lógicas}
+  \begin{center}
+  \small
+  \renewcommand{\arraystretch}{1.2}
+  \begin{tabularx}{0.95\textwidth}{@{} l X l @{}}
+    \toprule
+    \textbf{Operación SQL} & \textbf{Comportamiento de Intersección} & \textbf{Aplicación Práctica} \\
+    \midrule
+    \texttt{INNER JOIN}  & Registros coincidentes en ambos universos. & Cruce estricto de entidades. \\
+    \texttt{LEFT JOIN}   & Universo Izquierdo íntegro + coincidencias. & Auditoría e identificación de huérfanos. \\
+    \texttt{RIGHT JOIN}  & Universo Derecho íntegro + coincidencias.  & Idéntico a Left invirtiendo el orden. \\
+    \texttt{UNION}       & Fusión vertical sin duplicidad de filas.  & Consolidación de catálogos homogéneos. \\
+    \texttt{UNION ALL}   & Fusión vertical masiva con duplicidad.    & Concatenación veloz sin costo de ordenamiento. \\
+    \bottomrule
+  \end{tabularx}
+  \end{center}
+\end{frame}
+
+\begin{frame}[fragile]{Mecánica de Combinaciones en Código}
+  \begin{sqlbox}{INNER JOIN — Coincidencias Exactas}
+SELECT c.nombre, p.pedido_id, p.monto
+FROM clientes AS c
+INNER JOIN pedidos AS p ON c.cliente_id = p.cliente_id;
+  \end{sqlbox}
+  \vspace{4pt}
+  \begin{sqlbox}{LEFT JOIN — Inclusión Total y Detección de Nulos}
+SELECT c.nombre, p.pedido_id, p.monto
+FROM clientes AS c
+LEFT JOIN pedidos AS p ON c.cliente_id = p.cliente_id;
+
+-- Detección analítica de clientes inactivos (sin transacciones)
+-- WHERE p.pedido_id IS NULL;
+  \end{sqlbox}
+\end{frame}
+
+%=============================================================================
+\section{Escritura de Datos}
+%=============================================================================
+
+\begin{frame}[fragile]{Operaciones de Manipulación DML}
+  \begin{sqlbox}{Escritura, Mutación y Eliminación Masiva}
+-- Inserción multi-registro atómica
+INSERT INTO productos (nombre, precio, stock) VALUES 
+('Teclado Mecánico', 850.00, 40),
+('Monitor 24"', 3200.00, 15);
+
+-- Modificación con alcance delimitado
+UPDATE productos 
+SET precio = precio * 1.10 
+WHERE categoria_id = 3;
+
+-- Borrado físico selectivo
+DELETE FROM productos 
+WHERE stock = 0 AND categoria_id = 5;
+  \end{sqlbox}
+\end{frame}
+
+\begin{frame}{Contraste Técnico: DELETE vs. TRUNCATE}
+  \begin{center}
+  \small
+  \renewcommand{\arraystretch}{1.2}
+  \begin{tabularx}{0.95\textwidth}{@{} l X X @{}}
+    \toprule
+    \textbf{Dimensión Técnica} & \textbf{DELETE} & \textbf{TRUNCATE} \\
+    \midrule
+    Clasificación Formal       & Lenguaje DML & Lenguaje DDL \\
+    Capacidad de Filtrado      & Permite cláusula \texttt{WHERE}. & Remueve la tabla completa. \\
+    Manejo Transaccional       & Registra logs (\texttt{ROLLBACK} viable). & Operación directa sobre bloques de disco. \\
+    Desempeño e Impacto        & Lento (evaluación fila por fila). & Instantáneo (libera punteros de almacenamiento). \\
+    Contadores Secuenciales    & Preserva el estado de \texttt{AUTO\_INC}. & Resetea contadores al origen base. \\
+    Mecanismos de Disparo      & Ejecuta \textit{Triggers} asociados. & Ignora disparadores lógicos. \\
+    \bottomrule
+  \end{tabularx}
+  \end{center}
+  \begin{alertblock}{Directiva de Seguridad Monetaria}
+    Usa \texttt{DELETE} dentro de bloques de transacciones controladas en entornos de producción. Reserva \texttt{TRUNCATE} para procesos aislados de carga masiva de datos (ETL).
+  \end{alertblock}
+\end{frame}
+
+%=============================================================================
+\section{Administración de Tablas}
+%=============================================================================
+
+\begin{frame}[fragile]{Inicialización de Esquemas e Internacionalización}
+  \begin{sqlbox}{Inicialización del Contenedor de Base de Datos}
+CREATE DATABASE IF NOT EXISTS tienda_online
+    CHARACTER SET utf8mb4
+    COLLATE utf8mb4_unicode_ci;
+
+USE tienda_online;
+  \end{sqlbox}
+  \vspace{4pt}
+  \begin{alertblock}{Importancia Crítica de utf8mb4}
+    El juego de caracteres tradicional \texttt{utf8} de MySQL restringe el almacenamiento a 3 bytes por símbolo. Para asegurar compatibilidad con glifos internacionales modernos, ideogramas y codificación emoji, es obligatorio forzar el uso de \textbf{\texttt{utf8mb4}}.
+  \end{alertblock}
+\end{frame}
+
+\begin{frame}{Cardinalidad y Restricciones de Integridad}
+  \begin{columns}[T]
+    \column{0.32\textwidth}
+      \begin{block}{Relaciones 1:1}
+        \footnotesize Entidad con extensión única. Mapeada mediante una Foreign Key restringida explícitamente con indexación de unicidad \texttt{UNIQUE}.
+      \end{block}
+    \column{0.32\textwidth}
+      \begin{block}{Relaciones 1:N}
+        \footnotesize Estructura clásica Padre-Hijo. La clave foránea se inyecta directamente dentro de la tabla dependiente.
+      \end{block}
+    \column{0.32\textwidth}
+      \begin{block}{Relaciones N:M}
+        \footnotesize Dependencia distributiva asociativa. Exige la creación imperativa de una \textbf{tabla intermedia} relacional.
+      \end{block}
+  \end{columns}
+  \vspace{10pt}
+  \begin{alertblock}{Regla Operativa en Sistemas Transaccionales}
+    \textbf{Orden de Inserción:} Escribir primero las tablas base (Padres) antes de asociar elementos en las dependientes.\\
+    \textbf{Orden de Eliminación:} Operar en sentido inverso para no violar las restricciones de integridad referencial.
+  \end{alertblock}
+\end{frame}
+
+%=============================================================================
+% \section{Conceptos Avanzados}
+%=============================================================================
+
+\begin{frame}[fragile]{Estrategias de Indexación (INDEX)}
+  \begin{sqlbox}{Tipos de Índices y Optimización de Consultas}
+-- Índice B-Tree estándar para búsquedas rápidas
+CREATE INDEX idx_apellido ON clientes(apellido);
+
+-- Índice compuesto ideal para filtros ordenados combinados
+CREATE INDEX idx_cat_precio ON productos(categoria_id, precio);
+
+-- Índice con restricción estricta de unicidad lógica
+CREATE UNIQUE INDEX uq_correo ON usuarios(correo);
+
+-- Índice Full-Text para optimización de motores de búsqueda semántica
+CREATE FULLTEXT INDEX ft_desc ON productos(descripcion);
+  \end{sqlbox}
+\end{frame}
+
+\begin{frame}[fragile]{Automatización Interna mediante Triggers}
+  \begin{sqlbox}{Trigger Corporativo de Auditoría de Precios}
+DELIMITER $$
+CREATE TRIGGER trg_auditoria_precio
+AFTER UPDATE ON productos
+FOR EACH ROW
+BEGIN
+    IF OLD.precio <> NEW.precio THEN
+        INSERT INTO auditoria_precios (producto_id, precio_ant, precio_new, usuario, fecha)
+        VALUES (NEW.producto_id, OLD.precio, NEW.precio, USER(), NOW());
+    END IF;
+END$$
+DELIMITER ;
+  \end{sqlbox}
+\end{frame}
+
+\begin{frame}[fragile]{Abstracciones Lógicas: Vistas y Procedimientos}
+  \begin{sqlbox}{Encapsulamiento Lógico Mediante VIEW}
+CREATE VIEW vista_pedidos_activos AS
+SELECT p.pedido_id, c.nombre AS cliente, p.total
+FROM pedidos AS p
+INNER JOIN clientes AS c ON p.cliente_id = c.cliente_id
+WHERE p.estado = 'activo';
+  \end{sqlbox}
+  \vspace{4pt}
+  \begin{sqlbox}{Invocación de Procedimientos Almacenados (Stored Procedures)}
+-- Ejecución modular parametrizada de alta seguridad
+CALL sp_resumen_cliente(7, @num_pedidos, @monto);
+SELECT @num_pedidos AS pedidos, @monto AS total;
+  \end{sqlbox}
+\end{frame}
+
+\begin{frame}[fragile]{Control Transaccional Complejo}
+  \begin{sqlbox}{Uso Avanzado de Bloques Operativos y Savepoints}
+START TRANSACTION;
+
+INSERT INTO pedidos (cliente_id, total, fecha) VALUES (12, 1500.00, CURDATE());
+SAVEPOINT sp_pedido_base;
+
+UPDATE productos SET stock = stock - 3 WHERE producto_id = 5;
+
+-- Si las condiciones del inventario son inválidas:
+-- ROLLBACK TO sp_pedido_base;
+
+COMMIT;
+  \end{sqlbox}
+  \begin{exampleblock}{Mecanismo de Aislamiento de Motores (InnoDB)}
+    El nivel nativo \textbf{REPEATABLE READ} imposibilita lecturas sucias asegurando la inmutabilidad de los datos consultados a lo largo de toda la transacción activa.
+  \end{exampleblock}
+\end{frame}
+
+%=============================================================================
+\section{Conexión desde Código}
+%=============================================================================
+
+\begin{frame}[fragile]{Conectores de Aplicación e Inyección SQL}
+  \begin{sqlbox}{Implementación Orientada a Objetos en Python}
+import mysql.connector
+conn = mysql.connector.connect(
+    host="localhost", user="app_user", password="s3cr3to", database="tienda_online"
+)
+cursor = conn.cursor(dictionary=True)
+cursor.execute("SELECT nombre, precio FROM productos LIMIT 5")
+for fila in cursor.fetchall():
+    print(f"Producto: {fila['nombre']} | Precio: {fila['precio']}")
+  \end{sqlbox}
+  \vspace{2pt}
+  \begin{alertblock}{Mitigación Total de Vulnerabilidades OWASP (SQL Injection)}
+\begin{lstlisting}[language=Python, numbers=none, frame=none]
+# INSEGURO (Vulnerable a ataques destructivos por concatenación):
+query = "SELECT * FROM usuarios WHERE user = '" + input_usuario + "'"
+
+# SEGURO (Uso Mandatorio de Consultas Parametrizadas y Enlazadas):
+cursor.execute("SELECT * FROM usuarios WHERE user = %s", (input_usuario,))
+\end{lstlisting}
+  \end{alertblock}
+\end{frame}
+
+%=============================================================================
+\section{Próximos Pasos}
+%=============================================================================
+
+\begin{frame}{Estrategias de Cierre y Práctica Profesional}
+  \begin{columns}[T]
+    \column{0.48\textwidth}
+      \begin{block}{Hitos de Consolidación Técnico}
+        \begin{itemize}
+          \item Diseñar diagramas entidad-relación (DER) normalizados en tercera forma normal (3FN).
+          \item Practicar perfiles de ejecución analizando consultas complejas mediante el comando \texttt{EXPLAIN}.
+        \end{itemize}
+      \end{block}
+    \column{0.48\textwidth}
+      \begin{exampleblock}{Laboratorios de Práctica Sugeridos}
+        \begin{itemize}
+          \item Instalación local y configuración óptima de motores usando entornos aislados con Docker.
+          \item Resolución de retos relacionales avanzados en plataformas interactivas especializadas.
+        \end{itemize}
+      \end{exampleblock}
+  \end{columns}
+  \vspace{10pt}
+  \centering
+  \textbf{\Large ¡Muchas gracias por su atención!} \\
+  \vspace{5pt}
+  \footnotesize Comisión Nacional Bancaria y de Valores — Coordinación de Ciencia de Datos
+\end{frame}
+
+\end{document}
+
+
+

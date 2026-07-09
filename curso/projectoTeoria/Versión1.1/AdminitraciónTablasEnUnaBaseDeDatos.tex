@@ -1,0 +1,486 @@
+\newpage
+\section{Administración de Tablas}
+
+Las sentencias de administración de tablas pertenecen al sublenguaje
+\textbf{DDL} (\textit{Data Definition Language}). A diferencia de las
+instrucciones DML, los cambios DDL son \textbf{autoconfirmados}
+(\textit{auto-commit}) en la mayoría de los motores: no pueden deshacerse
+con \texttt{ROLLBACK}.
+
+% ─────────────────────────────────────────────────────────
+\subsection{\texttt{CREATE TABLE}}
+
+\begin{definicion}{CREATE TABLE}
+  Crea una nueva tabla en la base de datos activa. La sentencia define el
+  nombre de cada columna, su \textbf{tipo de dato}, las
+  \textbf{restricciones} de integridad y las \textbf{opciones de tabla}
+  (motor de almacenamiento, juego de caracteres, etc.).
+\end{definicion}
+
+\textbf{Sintaxis completa:}
+
+\begin{lstlisting}[style=sql, caption={Estructura general de CREATE TABLE}]
+CREATE TABLE [IF NOT EXISTS] nombre_tabla (
+    columna1  tipo  [opciones_columna] [restriccion_columna],
+    columna2  tipo  [opciones_columna] [restriccion_columna],
+    ...
+    [restricciones_tabla]
+) [opciones_tabla];
+\end{lstlisting}
+
+\textbf{Tipos de datos más utilizados en MySQL:}
+
+\begin{table}[H]
+  \centering
+  \caption{Tipos de datos frecuentes en MySQL}
+  \renewcommand{\arraystretch}{1.3}
+  \rowcolors{2}{gray!10}{white}
+  \begin{tabularx}{\textwidth}{>{\ttfamily}l l X}
+    \toprule
+    \textbf{Tipo}         & \textbf{Categoría} & \textbf{Descripción}                             \\
+    \midrule
+    TINYINT               & Entero    & 1 byte; rango $-128$ a $127$ (o $0$–$255$ UNSIGNED) \\
+    INT / INTEGER         & Entero    & 4 bytes; rango $\pm2{,}1 \times 10^9$            \\
+    BIGINT                & Entero    & 8 bytes; para identificadores de gran volumen    \\
+    DECIMAL(p,s)          & Decimal   & Precisión exacta; ideal para valores monetarios  \\
+    FLOAT / DOUBLE        & Flotante  & Precisión aproximada; uso científico             \\
+    CHAR(n)               & Texto     & Longitud fija $n$; rellena con espacios          \\
+    VARCHAR(n)            & Texto     & Longitud variable hasta $n$ caracteres           \\
+    TEXT                  & Texto     & Hasta 65\,535 bytes; sin valor DEFAULT           \\
+    DATE                  & Fecha     & Formato \texttt{YYYY-MM-DD}                      \\
+    DATETIME              & Fecha/hora& Formato \texttt{YYYY-MM-DD HH:MM:SS}             \\
+    TIMESTAMP             & Fecha/hora& UTC; se actualiza automáticamente con \texttt{ON UPDATE} \\
+    BOOLEAN / TINYINT(1)  & Lógico    & MySQL almacena booleanos como \texttt{TINYINT(1)} \\
+    ENUM('a','b',\ldots)  & Catálogo  & Solo acepta los valores de la lista              \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\begin{ejemplo}
+  Tabla completa con varios tipos de datos, restricciones y opciones:
+
+\begin{lstlisting}[style=sql, caption={CREATE TABLE con opciones reales de producción}]
+CREATE TABLE IF NOT EXISTS productos (
+    producto_id   INT UNSIGNED     NOT NULL AUTO_INCREMENT,
+    sku           VARCHAR(30)      NOT NULL,
+    nombre        VARCHAR(120)     NOT NULL,
+    descripcion   TEXT,
+    precio        DECIMAL(10,2)    NOT NULL DEFAULT 0.00,
+    stock         INT UNSIGNED     NOT NULL DEFAULT 0,
+    activo        TINYINT(1)       NOT NULL DEFAULT 1,
+    categoria_id  INT UNSIGNED     NOT NULL,
+    creado_en     DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    actualizado   TIMESTAMP        NOT NULL
+                                   DEFAULT CURRENT_TIMESTAMP
+                                   ON UPDATE CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (producto_id),
+    UNIQUE  KEY uq_sku (sku),
+    CONSTRAINT chk_precio CHECK (precio >= 0),
+    CONSTRAINT fk_prod_cat
+        FOREIGN KEY (categoria_id)
+        REFERENCES categorias(categoria_id)
+        ON DELETE RESTRICT
+        ON UPDATE CASCADE
+)
+ENGINE  = InnoDB
+CHARSET = utf8mb4
+COLLATE = utf8mb4_unicode_ci;
+\end{lstlisting}
+\end{ejemplo}
+
+% ─────────────────────────────────────────────────────────
+\subsection{Restricción \texttt{NOT NULL}}
+
+\begin{definicion}{NOT NULL}
+  Prohíbe que una columna almacene el valor \texttt{NULL}. Toda inserción o
+  actualización que no suministre un valor para esa columna — y que no tenga
+  \texttt{DEFAULT} definido — será rechazada por el motor.
+\end{definicion}
+
+\begin{lstlisting}[style=sql, caption={Columnas con y sin NOT NULL}]
+CREATE TABLE empleados (
+    empleado_id  INT          NOT NULL AUTO_INCREMENT,
+    nombre       VARCHAR(100) NOT NULL,   -- obligatorio
+    telefono     VARCHAR(20)  NULL,       -- opcional (admite NULL)
+    correo       VARCHAR(120) NOT NULL,
+    PRIMARY KEY (empleado_id)
+);
+\end{lstlisting}
+
+\begin{nota}
+  Omitir \texttt{NOT NULL} equivale implícitamente a \texttt{NULL} en MySQL.
+  Declararlo de forma explícita mejora la legibilidad y la intención del
+  esquema.
+\end{nota}
+
+% ─────────────────────────────────────────────────────────
+\subsection{Restricción \texttt{UNIQUE}}
+
+\begin{definicion}{UNIQUE}
+  Garantiza que todos los valores de una columna (o combinación de columnas)
+  sean distintos dentro de la tabla. A diferencia de \texttt{PRIMARY KEY},
+  una tabla puede tener \textbf{múltiples} restricciones \texttt{UNIQUE} y
+  estas \textbf{sí permiten} el valor \texttt{NULL} (con matices según el
+  motor).
+\end{definicion}
+
+\begin{lstlisting}[style=sql, caption={UNIQUE a nivel de columna y de tabla}]
+CREATE TABLE usuarios (
+    usuario_id  INT          UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    correo      VARCHAR(120) NOT NULL UNIQUE,          -- nivel columna
+    username    VARCHAR(50)  NOT NULL,
+    doc_tipo    CHAR(3)      NOT NULL,
+    doc_numero  VARCHAR(20)  NOT NULL,
+
+    -- UNIQUE compuesto a nivel de tabla
+    UNIQUE KEY uq_documento (doc_tipo, doc_numero)
+);
+\end{lstlisting}
+
+\begin{table}[H]
+  \centering
+  \caption{Diferencias entre \texttt{UNIQUE} y \texttt{PRIMARY KEY}}
+  \renewcommand{\arraystretch}{1.3}
+  \rowcolors{2}{gray!10}{white}
+  \begin{tabularx}{\textwidth}{l X X}
+    \toprule
+    \textbf{Característica} & \textbf{PRIMARY KEY}          & \textbf{UNIQUE}                      \\
+    \midrule
+    Cantidad por tabla      & Solo una                      & Múltiples                            \\
+    Admite NULL             & No                            & Sí (un NULL por columna en MySQL)    \\
+    Índice generado         & Clúster (InnoDB)              & Secundario no clúster                \\
+    Uso habitual            & Identificador de fila         & Atributos alternativos únicos        \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+% ─────────────────────────────────────────────────────────
+\subsection{Restricción \texttt{PRIMARY KEY}}
+
+\begin{definicion}{PRIMARY KEY}
+  Identifica de forma \textbf{única e irrepetible} cada fila de la tabla.
+  Implica \texttt{NOT NULL} y \texttt{UNIQUE} de forma automática. Puede
+  ser \textbf{simple} (una columna) o \textbf{compuesta} (varias columnas).
+\end{definicion}
+
+\begin{lstlisting}[style=sql, caption={PK simple vs.\ PK compuesta}]
+-- Clave primaria simple (columna única)
+CREATE TABLE categorias (
+    categoria_id  INT UNSIGNED AUTO_INCREMENT,
+    nombre        VARCHAR(80) NOT NULL,
+    PRIMARY KEY (categoria_id)
+);
+
+-- Clave primaria compuesta (tabla intermedia N:M)
+CREATE TABLE inscripciones (
+    estudiante_id  INT UNSIGNED NOT NULL,
+    curso_id       INT UNSIGNED NOT NULL,
+    fecha_alta     DATE         NOT NULL,
+    PRIMARY KEY (estudiante_id, curso_id)   -- par debe ser único
+);
+\end{lstlisting}
+
+\begin{nota}
+  En InnoDB, la \texttt{PRIMARY KEY} determina el \textbf{índice clúster}:
+  las filas se almacenan físicamente ordenadas por ella. Elegir una PK de
+  tipo entero secuencial (\texttt{AUTO\_INCREMENT}) produce inserciones más
+  eficientes que una PK de tipo cadena o UUID aleatorio.
+\end{nota}
+
+% ─────────────────────────────────────────────────────────
+\subsection{Restricción \texttt{CHECK}}
+
+\begin{definicion}{CHECK}
+  Valida que el valor de una columna cumpla una \textbf{expresión booleana}
+  antes de aceptar la inserción o actualización. Si la expresión devuelve
+  \texttt{FALSE}, la operación es rechazada. Disponible en MySQL a partir
+  de la versión~8.0.16.
+\end{definicion}
+
+\begin{lstlisting}[style=sql, caption={CHECK a nivel de columna y de tabla}]
+CREATE TABLE contratos (
+    contrato_id   INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    fecha_inicio  DATE         NOT NULL,
+    fecha_fin     DATE,
+    salario       DECIMAL(10,2) NOT NULL,
+    tipo          ENUM('tiempo_completo','medio_tiempo','honorarios') NOT NULL,
+
+    -- CHECK a nivel de columna
+    salario_min   DECIMAL(10,2) NOT NULL
+                  CHECK (salario_min >= 0),
+
+    -- CHECK a nivel de tabla (puede referenciar varias columnas)
+    CONSTRAINT chk_salario       CHECK (salario > 0),
+    CONSTRAINT chk_fechas        CHECK (fecha_fin IS NULL
+                                        OR fecha_fin > fecha_inicio)
+);
+\end{lstlisting}
+
+\begin{nota}
+  MySQL evalúa \texttt{CHECK} pero históricamente lo ignoraba en versiones
+  anteriores a la~8.0. Al migrar esquemas de versiones antiguas, conviene
+  verificar que las restricciones efectivamente se aplican.
+\end{nota}
+
+% ─────────────────────────────────────────────────────────
+\subsection{Restricción \texttt{DEFAULT}}
+
+\begin{definicion}{DEFAULT}
+  Asigna un \textbf{valor predefinido} a una columna cuando el \texttt{INSERT}
+  no la incluye en su lista de columnas o cuando se especifica explícitamente
+  la palabra clave \texttt{DEFAULT}.
+\end{definicion}
+
+\begin{lstlisting}[style=sql, caption={Uso de DEFAULT con distintos tipos}]
+CREATE TABLE sesiones (
+    sesion_id   INT UNSIGNED   AUTO_INCREMENT PRIMARY KEY,
+    usuario_id  INT UNSIGNED   NOT NULL,
+    activa      TINYINT(1)     NOT NULL DEFAULT 1,
+    intentos    TINYINT        NOT NULL DEFAULT 0,
+    creada_en   DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    expira_en   DATETIME       NOT NULL DEFAULT (NOW() + INTERVAL 8 HOUR),
+    ip_origen   VARCHAR(45)    DEFAULT NULL
+);
+\end{lstlisting}
+
+\begin{lstlisting}[style=sql, caption={INSERT que aprovecha los DEFAULT definidos}]
+-- Solo se suministran los campos obligatorios sin DEFAULT
+INSERT INTO sesiones (usuario_id)
+VALUES (42);
+-- activa=1, intentos=0, creada_en=ahora, expira_en=ahora+8h, ip_origen=NULL
+\end{lstlisting}
+
+% ─────────────────────────────────────────────────────────
+\subsection{\texttt{AUTO\_INCREMENT}}
+
+\begin{definicion}{AUTO\_INCREMENT}
+  Genera automáticamente un valor entero \textbf{único y creciente} para
+  cada nueva fila. Se aplica a columnas de tipo entero que sean clave
+  primaria o tengan índice \texttt{UNIQUE}. El valor inicial es~1 y el
+  incremento es~1 por defecto.
+\end{definicion}
+
+\begin{lstlisting}[style=sql, caption={AUTO\_INCREMENT con valor inicial personalizado}]
+CREATE TABLE facturas (
+    factura_id  INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    cliente_id  INT UNSIGNED NOT NULL,
+    total       DECIMAL(12,2) NOT NULL
+) AUTO_INCREMENT = 1000;   -- la primera factura tendrá ID 1000
+\end{lstlisting}
+
+\begin{lstlisting}[style=sql, caption={Consultar y modificar el contador AUTO\_INCREMENT}]
+-- Ver el próximo valor que se asignará
+SELECT AUTO_INCREMENT
+FROM   information_schema.TABLES
+WHERE  TABLE_SCHEMA = 'mi_base'
+  AND  TABLE_NAME   = 'facturas';
+
+-- Modificar el contador (útil tras limpiezas masivas)
+ALTER TABLE facturas AUTO_INCREMENT = 5000;
+\end{lstlisting}
+
+\begin{nota}
+  El contador \texttt{AUTO\_INCREMENT} \textbf{nunca retrocede} al eliminar
+  filas. Si se inserta y luego se borra el registro con \texttt{ID = 1005},
+  el siguiente ID será~\texttt{1006}, no~\texttt{1005}. Esto es intencional
+  para evitar colisiones en entornos concurrentes.
+\end{nota}
+
+% ─────────────────────────────────────────────────────────
+\subsection{\texttt{DROP TABLE}}
+
+\begin{definicion}{DROP TABLE}
+  Elimina una tabla de forma \textbf{permanente e irreversible}: borra la
+  estructura, todos sus datos y los índices asociados. No puede deshacerse
+  con \texttt{ROLLBACK}.
+\end{definicion}
+
+\begin{lstlisting}[style=sql, caption={DROP TABLE básico y con guarda}]
+-- Falla con error si la tabla no existe
+DROP TABLE pedidos;
+
+-- No genera error si la tabla no existe
+DROP TABLE IF EXISTS pedidos;
+
+-- Eliminar varias tablas en una sola sentencia
+DROP TABLE IF EXISTS inscripciones, pedidos, sesiones;
+\end{lstlisting}
+
+\textbf{Orden correcto con claves foráneas:}
+
+\begin{lstlisting}[style=sql, caption={DROP TABLE respetando integridad referencial}]
+-- ERROR: no se puede eliminar 'clientes' mientras 'pedidos' la referencia
+DROP TABLE clientes;   -- falla
+
+-- Correcto: eliminar primero la tabla HIJO, luego la tabla PADRE
+DROP TABLE IF EXISTS pedidos;    -- hijo (tiene la FK)
+DROP TABLE IF EXISTS clientes;   -- padre (tiene la PK referenciada)
+\end{lstlisting}
+
+\begin{nota}
+  Como alternativa al orden manual, es posible deshabilitar
+  temporalmente la comprobación de claves foráneas. Esta práctica debe
+  usarse con extrema cautela y solo en scripts de mantenimiento
+  controlados:
+\begin{lstlisting}[style=sql, caption={Deshabilitar FK solo para scripts de mantenimiento}]
+SET FOREIGN_KEY_CHECKS = 0;
+DROP TABLE IF EXISTS clientes, pedidos;
+SET FOREIGN_KEY_CHECKS = 1;
+\end{lstlisting}
+\end{nota}
+
+% ─────────────────────────────────────────────────────────
+\subsection{\texttt{ALTER TABLE}}
+
+\begin{definicion}{ALTER TABLE}
+  Modifica la \textbf{estructura} de una tabla existente sin necesidad de
+  recrearla. Permite agregar, renombrar, modificar y eliminar columnas, así
+  como gestionar restricciones e índices.
+\end{definicion}
+
+% ── ADD ──────────────────────────────────────────────────
+\subsubsection{\texttt{ADD}}
+
+Agrega nuevas columnas o restricciones a una tabla existente.
+
+\begin{lstlisting}[style=sql, caption={ADD COLUMN — agregar columnas}]
+-- Agregar una columna al final (comportamiento por defecto)
+ALTER TABLE productos
+    ADD COLUMN descuento DECIMAL(5,2) NOT NULL DEFAULT 0.00;
+
+-- Agregar una columna en una posición específica
+ALTER TABLE productos
+    ADD COLUMN imagen_url VARCHAR(255) NULL
+    AFTER nombre;
+
+-- Agregar al principio
+ALTER TABLE productos
+    ADD COLUMN prioridad TINYINT NOT NULL DEFAULT 0
+    FIRST;
+\end{lstlisting}
+
+\begin{lstlisting}[style=sql, caption={ADD CONSTRAINT — agregar restricciones}]
+-- Agregar índice UNIQUE
+ALTER TABLE usuarios
+    ADD CONSTRAINT uq_correo UNIQUE (correo);
+
+-- Agregar clave foránea
+ALTER TABLE pedidos
+    ADD CONSTRAINT fk_pedido_cliente
+        FOREIGN KEY (cliente_id) REFERENCES clientes(cliente_id)
+        ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- Agregar CHECK
+ALTER TABLE productos
+    ADD CONSTRAINT chk_descuento CHECK (descuento BETWEEN 0 AND 100);
+\end{lstlisting}
+
+% ── RENAME COLUMN ─────────────────────────────────────────
+\subsubsection{\texttt{RENAME COLUMN}}
+
+Cambia el nombre de una columna preservando su tipo, restricciones y datos.
+Disponible en MySQL~8.0+.
+
+\begin{lstlisting}[style=sql, caption={RENAME COLUMN}]
+-- Renombrar una columna (MySQL 8.0+)
+ALTER TABLE clientes
+    RENAME COLUMN telefono TO telefono_principal;
+
+-- Renombrar varias columnas en una sola sentencia
+ALTER TABLE productos
+    RENAME COLUMN img_url   TO imagen_url,
+    RENAME COLUMN desc_prod TO descripcion;
+\end{lstlisting}
+
+\begin{nota}
+  En versiones anteriores a MySQL~8.0, el renombrado se realiza con
+  \texttt{CHANGE COLUMN}, que requiere repetir el tipo de dato:
+\begin{lstlisting}[style=sql, caption={CHANGE COLUMN para MySQL anterior a 8.0}]
+ALTER TABLE clientes
+    CHANGE COLUMN telefono telefono_principal VARCHAR(20) NULL;
+\end{lstlisting}
+\end{nota}
+
+% ── MODIFY COLUMN ─────────────────────────────────────────
+\subsubsection{\texttt{MODIFY COLUMN}}
+
+Cambia el \textbf{tipo de dato}, las restricciones o las opciones de una
+columna existente sin alterar su nombre.
+
+\begin{lstlisting}[style=sql, caption={MODIFY COLUMN — cambios de tipo y propiedades}]
+-- Ampliar el tamaño de un VARCHAR
+ALTER TABLE productos
+    MODIFY COLUMN nombre VARCHAR(200) NOT NULL;
+
+-- Cambiar tipo y agregar restricción
+ALTER TABLE contratos
+    MODIFY COLUMN salario DECIMAL(12,2) NOT NULL DEFAULT 0.00;
+
+-- Cambiar posición de la columna
+ALTER TABLE empleados
+    MODIFY COLUMN correo VARCHAR(120) NOT NULL AFTER nombre;
+\end{lstlisting>
+
+\begin{nota}
+  \texttt{MODIFY COLUMN} reescribe la definición completa de la columna.
+  Omitir \texttt{NOT NULL} o \texttt{DEFAULT} los elimina, aunque el dato
+  ya exista. Siempre verificar la definición actual con \texttt{DESCRIBE}
+  antes de modificar.
+\end{nota}
+
+% ── DROP COLUMN ───────────────────────────────────────────
+\subsubsection{\texttt{DROP COLUMN}}
+
+Elimina una columna y \textbf{todos sus datos} de forma permanente.
+
+\begin{lstlisting}[style=sql, caption={DROP COLUMN}]
+-- Eliminar una columna
+ALTER TABLE productos
+    DROP COLUMN imagen_url;
+
+-- Eliminar varias columnas en una sola sentencia
+ALTER TABLE empleados
+    DROP COLUMN fax,
+    DROP COLUMN extension;
+
+-- Eliminar una restricción antes de poder borrar la columna
+ALTER TABLE pedidos
+    DROP FOREIGN KEY fk_pedido_cliente,
+    DROP COLUMN cliente_id;
+\end{lstlisting}
+
+\begin{nota}
+  Si la columna forma parte de un índice o restricción, MySQL exige
+  eliminar primero esa dependencia. Usar \texttt{SHOW CREATE TABLE}
+  para identificar los nombres exactos de índices y claves foráneas
+  antes de ejecutar el \texttt{DROP}.
+\end{nota}
+
+% ── Resumen del módulo ────────────────────────────────────
+\subsection*{Resumen del módulo}
+
+\begin{table}[H]
+  \centering
+  \caption{Sentencias y restricciones DDL de administración de tablas}
+  \renewcommand{\arraystretch}{1.3}
+  \rowcolors{2}{gray!10}{white}
+  \begin{tabularx}{\textwidth}{>{\ttfamily}l X}
+    \toprule
+    \textbf{Sentencia / Restricción} & \textbf{Propósito principal}                                    \\
+    \midrule
+    CREATE TABLE        & Crear la tabla con columnas, tipos y restricciones              \\
+    NOT NULL            & Prohibir valores nulos en una columna                           \\
+    UNIQUE              & Garantizar unicidad; permite múltiples por tabla                \\
+    PRIMARY KEY         & Identificador único de fila; implica NOT NULL + UNIQUE          \\
+    CHECK               & Validar valores con una expresión booleana (MySQL 8.0.16+)      \\
+    DEFAULT             & Asignar valor automático cuando el INSERT no lo provee          \\
+    AUTO\_INCREMENT     & Generar identificadores enteros secuenciales automáticamente    \\
+    DROP TABLE          & Eliminar tabla y datos permanentemente                          \\
+    ALTER TABLE ADD     & Agregar columnas o restricciones a tabla existente              \\
+    ALTER TABLE RENAME  & Renombrar columna sin perder datos (MySQL 8.0+)                 \\
+    ALTER TABLE MODIFY  & Cambiar tipo, opciones o posición de una columna                \\
+    ALTER TABLE DROP    & Eliminar columna o restricción de tabla existente               \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
