@@ -2375,11 +2375,6 @@
   </bcf:bibdata>
   <bcf:section number="0">
     <bcf:citekey order="1" intorder="1">date2003introduction</bcf:citekey>
-    <bcf:citekey order="2" intorder="1">codasyl1971</bcf:citekey>
-    <bcf:citekey order="3" intorder="1">codd1970</bcf:citekey>
-    <bcf:citekey order="4" intorder="1">codd1985</bcf:citekey>
-    <bcf:citekey order="5" intorder="1">chamberlin1974</bcf:citekey>
-    <bcf:citekey order="6" intorder="1">date2003introduction</bcf:citekey>
   </bcf:section>
   <!-- SORTING TEMPLATES -->
   <bcf:sortingtemplate name="nyt">
