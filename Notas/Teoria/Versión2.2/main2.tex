@@ -10,6 +10,10 @@
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage[spanish, es-tabla]{babel}
+\usepackage{booktabs}
+\usepackage{array}
+
+
 
 % ─── Tipografía ───────────────────────────────────────────
 \usepackage{lmodern}
@@ -152,10 +156,11 @@ sorting=nyt
 
 \author{%
 	\textbf{Material de Referencia }\\[2pt]
-	\small \texttt{miyoshikamium@gmail.mx}
+	\small \texttt{miyoshikamium@gmail.com}\\
+    \texttt{ssdgsr05@cnsf.gob.mx}
 }
 
-\date{\small Versión 6.0 — \today}
+\date{\small Versión 7.0 — \today}
 
 %==============================================================
 %  INICIO DEL DOCUMENTO
@@ -168,10 +173,9 @@ sorting=nyt
 	%--------------------------------------------------------------
 	\begin{abstract}
 		\noindent
-			Esta guía se detallan los fundamentos de bases de datos relacionales y SQL, abarcando desde la sintaxis básica del SELECT y sus operadores hasta técnicas avanzadas de filtrado (WHERE, LIKE, GROUP BY) y combinación de tablas (JOIN).
+			Esta guía se detallan los fundamentos de bases de datos relacionales y SQL, abarcando desde la sintaxis básica del SELECT y sus operadores hasta técnicas avanzadas de filtrado (WHERE, LIKE, GROUP BY) y combinación de tablas (JOIN).\\
 		\smallskip
-		\textbf{Palabras clave:} base de datos, modelo relacional, SQL, SGBD,
-		álgebra relacional, normalización, ACID, DML, DDL.
+		\textbf{Palabras clave:} base de datos, SQL, SGBD, normalización, ACID, DML, DDL.
 	\end{abstract}
 	\clearpage\\
 	
@@ -188,7 +192,7 @@ sorting=nyt
 		y compartible de datos relacionados entre sí, diseñada para
 		minimizar la redundancia y maximizar la integridad, de modo que
 		múltiples aplicaciones y usuarios puedan acceder a ella de manera
-		concurrente y controlada\cite{date2003introduction}.
+		concurrente y controlada.
 	\end{definicion}
 	
 	Esta definición merece descomponerse en sus atributos esenciales:
@@ -313,29 +317,33 @@ sorting=nyt
 	
 	Para ilustrar todos los ejemplos de esta sección usaremos una tabla
 	llamada \texttt{empleados} con la siguiente estructura y datos:
-	
-	\begin{lstlisting}[caption={Creación e inicialización de la tabla \texttt{empleados}.}]
-		CREATE TABLE empleados (
-		id          INT          PRIMARY KEY AUTO_INCREMENT,
-		nombre      VARCHAR(60)  NOT NULL,
-		departamento VARCHAR(40) NOT NULL,
-		cargo       VARCHAR(40)  NOT NULL,
-		salario     DECIMAL(10,2) NOT NULL,
-		fecha_ingreso DATE        NOT NULL
-		);
-		
-		INSERT INTO empleados (nombre, departamento, cargo, salario, fecha_ingreso) VALUES
-		('Ana García',      'Ventas',     'Gerente',    55000.00, '2018-03-15'),
-		('Luis Herrera',    'Ventas',     'Analista',   32000.00, '2020-07-01'),
-		('Sofía Ramírez',   'TI',         'Desarrolladora', 48000.00, '2019-11-20'),
-		('Carlos Mendoza',  'TI',         'DBA',        51000.00, '2017-05-10'),
-		('Elena Torres',    'RRHH',       'Coordinadora', 38000.00, '2021-02-28'),
-		('Marco Villanueva','Ventas',     'Analista',   31000.00, '2022-09-05'),
-		('Patricia Luna',   'TI',         'Desarrolladora', 47000.00, '2020-04-14'),
-		('Roberto Salas',   'RRHH',       'Gerente',    52000.00, '2016-08-22'),
-		('Diana Castillo',  'Finanzas',   'Analista',   39000.00, '2023-01-10'),
-		('Javier Moreno',   'Finanzas',   'Gerente',    58000.00, '2015-06-30');
-	\end{lstlisting}
+\begin{center}
+ \begin{table}[H]
+    \centering
+    \caption{Contenido de la tabla \texttt{empleados}.}
+    \label{tab:empleados}
+    \begin{tabular}{clllrc}
+        \toprule
+        \textbf{ID} & \textbf{Nombre} & \textbf{Departamento} & \textbf{Cargo} & \textbf{Salario} & \textbf{Fecha de ingreso} \\
+        \midrule
+        1  & Ana García        & Ventas   & Gerente         & 55000.00 & 2018-03-15 \\
+        2  & Luis Herrera      & Ventas   & Analista        & 32000.00 & 2020-07-01 \\
+        3  & Sofía Ramírez     & TI       & Desarrolladora  & 48000.00 & 2019-11-20 \\
+        4  & Carlos Mendoza    & TI       & DBA             & 51000.00 & 2017-05-10 \\
+        5  & Elena Torres      & RRHH     & Coordinadora    & 38000.00 & 2021-02-28 \\
+        6  & Marco Villanueva  & Ventas   & Analista        & 31000.00 & 2022-09-05 \\
+        7  & Patricia Luna     & TI       & Desarrolladora  & 47000.00 & 2020-04-14 \\
+        8  & Roberto Salas     & RRHH     & Gerente         & 52000.00 & 2016-08-22 \\
+        9  & Diana Castillo    & Finanzas & Analista        & 39000.00 & 2023-01-10 \\
+        10 & Javier Moreno     & Finanzas & Gerente         & 58000.00 & 2015-06-30 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+\end{center}
+El código para la creación de esta tabla e inserción de sus datos se anexa en la sección Tablas.
+        
+	%Insertar La tabla de manera explicita
+
 	
 	\subsection{Proyección de columnas: \texttt{SELECT *} y columnas específicas}
 	
@@ -908,31 +916,48 @@ sorting=nyt
 	
 
 	\newpage
+    \section*{Tablas}
+    	\begin{lstlisting}[caption={Creación e inicialización de la tabla \texttt{empleados}.}]
+		CREATE TABLE empleados (
+		id          INT          PRIMARY KEY AUTO_INCREMENT,
+		nombre      VARCHAR(60)  NOT NULL,
+		departamento VARCHAR(40) NOT NULL,
+		cargo       VARCHAR(40)  NOT NULL,
+		salario     DECIMAL(10,2) NOT NULL,
+		fecha_ingreso DATE        NOT NULL
+		);
+		
+		INSERT INTO empleados (nombre, departamento, cargo, salario, fecha_ingreso) VALUES
+		('Ana García',      'Ventas',     'Gerente',    55000.00, '2018-03-15'),
+		('Luis Herrera',    'Ventas',     'Analista',   32000.00, '2020-07-01'),
+		('Sofía Ramírez',   'TI',         'Desarrolladora', 48000.00, '2019-11-20'),
+		('Carlos Mendoza',  'TI',         'DBA',        51000.00, '2017-05-10'),
+		('Elena Torres',    'RRHH',       'Coordinadora', 38000.00, '2021-02-28'),
+		('Marco Villanueva','Ventas',     'Analista',   31000.00, '2022-09-05'),
+		('Patricia Luna',   'TI',         'Desarrolladora', 47000.00, '2020-04-14'),
+		('Roberto Salas',   'RRHH',       'Gerente',    52000.00, '2016-08-22'),
+		('Diana Castillo',  'Finanzas',   'Analista',   39000.00, '2023-01-10'),
+		('Javier Moreno',   'Finanzas',   'Gerente',    58000.00, '2015-06-30');
+	\end{lstlisting}
 
+
+
+    
 	\section*{Resumen General}
 	
 	Este material ha cubierto los aspectos fundamentales del lenguaje SQL,
 	organizados en torno a tres ejes principales:
 	
 	\begin{enumerate}
-		\item \textbf{Fundamentos teóricos} (secciones 1–4): Historia del problema
-		de los datos, el modelo relacional de Codd, el nacimiento de SQL y
-		la definición conceptual de una base de datos relacional.
-		
-		\item \textbf{Administración de esquemas} (secciones 5–6): Creación y
-		gestión de bases de datos y tablas mediante DDL, incluyendo tipos
-		de datos, restricciones y modificación de estructuras.
-		
-		\item \textbf{Operaciones sobre datos} (secciones 7–9): Consulta (SELECT),
+
+		\item \textbf{Operaciones sobre datos}  Consulta (SELECT),
 		escritura (INSERT, UPDATE, DELETE) y manejo de relaciones entre
 		tablas (JOIN, integridad referencial).
 		
 	\end{enumerate}
 	
 	El dominio de estos conceptos proporciona la base necesaria para:
-	diseñar esquemas normalizados, escribir consultas eficientes, mantener
-	la integridad de los datos y administrar bases de datos relacionales
-	de forma profesional.
+	, escribir consultas eficientes, mantener la integridad de los datos.
 	
 	\newpage
 	\printbibliography
